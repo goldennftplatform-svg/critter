@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/cache.js": { "maxDuration": 30 },
+    "api/sync.js": { "maxDuration": 30 },
+    "api/status.js": { "maxDuration": 15 }
+  }
+}

@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-0: #14110e;
+  --bg-1: #1c1712;
+  --bg-2: #261f18;
+  --ink: #f3e6d4;
+  --ink-dim: #b8a48c;
+  --ink-faint: #7a6a56;
+  --copper: #d4894a;
+  --copper-hot: #f0a35c;
+  --brass: #c9a227;
+  --steel: #6b8a9a;
+  --due: #7eb8c9;
+  --danger: #c45c3e;
+  --ok: #8fbc6b;
+  --line: rgba(243, 230, 212, 0.1);
+  --glow-copper: rgba(212, 137, 74, 0.35);
+  --font-display: 'Bricolage Grotesque', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color: var(--ink);
+  background: var(--bg-0);
+  font-family: var(--font-display);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(212, 137, 74, 0.18), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(126, 184, 201, 0.1), transparent 50%),
+    linear-gradient(180deg, #1a1510 0%, var(--bg-0) 40%, #0f0d0b 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--copper-hot);
+}
