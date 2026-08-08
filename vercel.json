@@ -8,6 +8,7 @@
   "functions": {
     "api/cache.js": { "maxDuration": 30 },
     "api/sync.js": { "maxDuration": 30 },
-    "api/status.js": { "maxDuration": 15 }
+    "api/status.js": { "maxDuration": 15 },
+    "api/watch.js": { "maxDuration": 30 }
   }
 }

@@ -624,6 +624,26 @@
   text-align: center;
 }
 
+.site-foot {
+  margin: 1.25rem 0 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.site-foot a {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--due);
+  text-decoration: none;
+}
+
+.site-foot a:active {
+  color: var(--copper-hot);
+}
+
 .feed-cards {
   display: grid;
   gap: 0.5rem;

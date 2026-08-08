@@ -202,6 +202,24 @@ app.post('/api/sync', async (req, res) => {
   })
 })
 
+app.get('/api/watch', async (req, res) => {
+  try {
+    const { snapshotWatchlist, WATCHLIST } = await import('../lib/watchSnapshot.js')
+    const id = typeof req.query?.id === 'string' ? req.query.id : null
+    const list = id ? WATCHLIST.filter((w) => w.id === id) : WATCHLIST
+    if (id && list.length === 0) {
+      return res.status(404).json({ success: false, error: 'unknown wallet id' })
+    }
+    const data = await snapshotWatchlist(list)
+    res.json({ success: true, data })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 // Production: serve built SPA
 const dist = path.join(ROOT, 'dist')
 app.use(express.static(dist))

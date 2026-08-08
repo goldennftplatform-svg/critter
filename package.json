@@ -12,7 +12,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "mf5": "node scripts/mf5-coach.mjs",
-    "sniff-whale": "node scripts/sniff-whale-spins.mjs"
+    "sniff-whale": "node scripts/sniff-whale-spins.mjs",
+    "watch": "node -e \"import('./lib/watchSnapshot.js').then(m=>m.snapshotWatchlist().then(d=>console.log(JSON.stringify(d,null,2))))\""
   },
   "dependencies": {
     "concurrently": "^9.2.1",

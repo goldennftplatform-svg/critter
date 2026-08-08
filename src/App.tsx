@@ -371,6 +371,10 @@ export default function App() {
         <p className="disclaimer">Read board only · play on mine.critters.quest</p>
       </section>
 
+      <footer className="site-foot">
+        <a href="/watch">Watch · roster radar</a>
+      </footer>
+
       {showFeed && (
         <>
           <div className="feed-cards">
