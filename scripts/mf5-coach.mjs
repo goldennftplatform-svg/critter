@@ -179,7 +179,7 @@ const lines = [
   '',
   ...checks,
   '',
-  'Playbook: docs/MF5-PLAYBOOK.md',
+  'Coach only — he signs every tx. No keys in this script.',
   '',
 ]
 
