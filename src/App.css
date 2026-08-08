@@ -69,6 +69,10 @@
   color: var(--ink-faint);
 }
 
+.top-meta .fresh {
+  color: var(--ok);
+}
+
 .windows {
   display: flex;
   gap: 0.3rem;

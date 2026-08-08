@@ -69,7 +69,13 @@ export function publicStatus() {
 
 /** Upstream payloads are fat (winners arrays). Cap hard on serverless. */
 const FULL_LIMIT = Number(process.env.ROUNDS_LIMIT) || 500
-const INCR_LIMIT = 120
+const INCR_LIMIT = 80
+const STALE_MS = 12_000
+
+export function isCacheStale() {
+  if (!g.updatedAt || g.rounds.length === 0) return true
+  return Date.now() - new Date(g.updatedAt).getTime() > STALE_MS
+}
 
 export async function syncRounds({ forceFull = false } = {}) {
   try {
@@ -85,6 +91,12 @@ export async function syncRounds({ forceFull = false } = {}) {
     g.lastSyncError = err instanceof Error ? err.message : String(err)
     return { ok: false, reason: g.lastSyncError }
   }
+}
+
+/** Cheap refresh used by /api/cache — only hits upstream when stale. */
+export async function ensureFresh() {
+  if (!isCacheStale()) return { ok: true, skipped: true, count: g.rounds.length }
+  return syncRounds({ forceFull: g.rounds.length === 0 })
 }
 
 export function getCache() {

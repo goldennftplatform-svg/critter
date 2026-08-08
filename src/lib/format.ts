@@ -28,8 +28,10 @@ export function shortTime(iso: string | null) {
   if (!iso) return '—'
   const d = new Date(iso)
   const diff = Date.now() - d.getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
+  const secs = Math.floor(diff / 1000)
+  if (secs < 8) return 'just now'
+  if (secs < 60) return `${secs}s ago`
+  const mins = Math.floor(secs / 60)
   if (mins < 60) return `${mins} min ago`
   const hrs = Math.floor(mins / 60)
   if (hrs < 48) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`

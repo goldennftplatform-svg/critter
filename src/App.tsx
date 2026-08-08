@@ -65,8 +65,8 @@ export default function App() {
     setError(json.data.status?.lastSyncError ?? null)
   }
 
-  async function sync(full = false) {
-    setSyncing(true)
+  async function pullFresh(full = false, { quiet = false } = {}) {
+    if (!quiet) setSyncing(true)
     try {
       const res = await fetch('/api/sync', {
         method: 'POST',
@@ -81,22 +81,29 @@ export default function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
-      setSyncing(false)
+      if (!quiet) setSyncing(false)
     }
+  }
+
+  async function sync(full = false) {
+    await pullFresh(full, { quiet: false })
   }
 
   useEffect(() => {
     let alive = true
     ;(async () => {
       try {
-        await loadCache()
+        await pullFresh(false, { quiet: true })
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : String(err))
       } finally {
         if (alive) setLoading(false)
       }
     })()
-    const poll = setInterval(() => loadCache().catch(() => {}), 20_000)
+    // Pull fresh rounds often — Lucky Pick settles ~every minute
+    const poll = setInterval(() => {
+      pullFresh(false, { quiet: true }).catch(() => {})
+    }, 12_000)
     return () => {
       alive = false
       clearInterval(poll)
@@ -167,6 +174,7 @@ export default function App() {
           <span>#{status?.newestId ?? '—'}</span>
           <span>{status?.count ?? rounds.length} cached</span>
           <span>last #{analysis.lastSquare}</span>
+          <span className="fresh">sync {shortTime(status?.updatedAt ?? null)}</span>
         </div>
         <div className="windows" role="group" aria-label="Window">
           {WINDOWS.map((w) => (

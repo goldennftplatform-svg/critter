@@ -1,13 +1,11 @@
-import { getCache, publicStatus, syncRounds } from './_lib.js'
+import { ensureFresh, getCache, publicStatus } from './_lib.js'
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'OPTIONS') return res.status(204).end()
 
-  const cache = getCache()
-  if (cache.rounds.length === 0) {
-    await syncRounds({ forceFull: true })
-  }
+  await ensureFresh()
 
   return res.status(200).json({
     success: true,

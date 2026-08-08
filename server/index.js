@@ -10,7 +10,7 @@ const DATA_DIR = path.join(ROOT, 'data')
 const CACHE_FILE = path.join(DATA_DIR, 'rounds.json')
 const SOURCE = 'https://mine.critters.quest/api/rounds'
 const PORT = Number(process.env.PORT) || 3789
-const SYNC_MS = 45_000
+const SYNC_MS = 15_000
 
 /**
  * @typedef {{
