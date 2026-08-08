@@ -10,7 +10,9 @@
     "build": "tsc -b && vite build",
     "start": "node server/index.js",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mf5": "node scripts/mf5-coach.mjs",
+    "sniff-whale": "node scripts/sniff-whale-spins.mjs"
   },
   "dependencies": {
     "concurrently": "^9.2.1",
