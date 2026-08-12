@@ -59,6 +59,14 @@ function WalletCard({ w }: { w: WatchWallet }) {
           ))}
         </div>
       )}
+      <a
+        className="map-btn"
+        href={w.mapUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Live map · spectate
+      </a>
       <p className="wcard-foot">{w.shortWallet}</p>
     </article>
   )
@@ -108,11 +116,19 @@ export default function Watch() {
           <p className="eyebrow">Public roster radar</p>
           <h1>WATCH</h1>
           <p className="watch-sub">
-            No login. On-chain team + next moves. Town fog stays his problem.
+            On-chain roster + next moves. Live Valdara map via free spectate — no account.
           </p>
         </div>
         <div className="watch-actions">
-          <button type="button" className="btn sync" onClick={() => load()} disabled={busy}>
+          <a
+            className="btn sync"
+            href={data?.spectateUrl || 'https://game.critters.quest/?spectate=1'}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Map
+          </a>
+          <button type="button" className="btn ghost" onClick={() => load()} disabled={busy}>
             {busy ? '…' : 'Refresh'}
           </button>
           <a className="btn ghost" href="/">

@@ -24,6 +24,7 @@ export type WatchWallet = {
   tagline: string
   wallet: string
   shortWallet: string
+  mapUrl: string
   updatedAt: string
   sol: number
   boardQuest: number
@@ -41,6 +42,7 @@ export type WatchWallet = {
 export type WatchPayload = {
   updatedAt: string
   publicOnly: boolean
+  spectateUrl: string
   note: string
   wallets: WatchWallet[]
 }

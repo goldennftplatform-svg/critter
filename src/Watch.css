@@ -242,6 +242,29 @@
   color: var(--copper-hot);
 }
 
+.map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.4rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(126, 196, 212, 0.45);
+  background: linear-gradient(180deg, rgba(126, 196, 212, 0.22), rgba(126, 196, 212, 0.06));
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--due);
+  text-decoration: none;
+}
+
+.map-btn:active {
+  transform: scale(0.98);
+  color: var(--ink);
+}
+
 .wcard-foot {
   margin: 0.45rem 0 0;
   font-family: var(--font-mono);
