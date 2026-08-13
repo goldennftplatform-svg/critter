@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import './App.css'
 import {
   analyze,
@@ -28,18 +28,10 @@ const WINDOWS = [
 
 const GRID = Array.from({ length: SQUARE_COUNT }, (_, i) => i + 1)
 
-function heatColor(hits: number, maxHits: number, expected: number) {
-  if (maxHits <= 0) return 'rgba(38, 31, 24, 0.9)'
-  const t = hits / maxHits
-  if (hits === 0) return 'rgba(28, 38, 44, 0.95)'
-  if (hits < expected * 0.75) {
-    const u = hits / Math.max(expected, 1)
-    return `rgba(70, 110, 125, ${0.35 + u * 0.35})`
-  }
-  const r = Math.round(120 + t * 110)
-  const g = Math.round(70 + t * 40)
-  const b = Math.round(40 + t * 20)
-  return `rgba(${r}, ${g}, ${b}, ${0.5 + t * 0.4})`
+/** 0–1 heat for roulette pocket glow (keeps numbers crisp). */
+function heatT(hits: number, maxHits: number) {
+  if (maxHits <= 0 || hits <= 0) return 0
+  return Math.min(hits / maxHits, 1)
 }
 
 function outcomeClass(label: string) {
@@ -274,45 +266,52 @@ export default function App() {
 
       <section className="board-sec">
         <div className="sec-head">
-          <h2>Board</h2>
-          <span>center ring lit · pick outline</span>
+          <h2>Lucky table</h2>
+          <span>big # · tiny hits · center ring</span>
         </div>
-        <div className="board">
-          {GRID.map((display, i) => {
-            const stat = byDisplay.get(display)!
-            const isLast = analysis.lastSquare === display
-            const isPick = pickSet.has(display)
-            const pickRank = analysis.picks.find((p) => p.square === display)?.rank
-            return (
-              <div
-                key={display}
-                className={[
-                  'sq',
-                  isInside(display) ? 'inside' : 'outside',
-                  isLast ? 'last' : '',
-                  isPick ? 'pick' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                style={{
-                  background: heatColor(stat.hits, maxHits, expected),
-                  animationDelay: `${i * 10}ms`,
-                }}
-              >
-                {pickRank != null && <em>{pickRank}</em>}
-                <strong>{display}</strong>
-                <small>{stat.hits}</small>
-              </div>
-            )
-          })}
+        <div className="felt">
+          <div className="board" role="grid" aria-label="Lucky Pick board">
+            {GRID.map((display, i) => {
+              const stat = byDisplay.get(display)!
+              const isLast = analysis.lastSquare === display
+              const isPick = pickSet.has(display)
+              const pickRank = analysis.picks.find((p) => p.square === display)?.rank
+              const odd = display % 2 === 1
+              return (
+                <div
+                  key={display}
+                  role="gridcell"
+                  className={[
+                    'sq',
+                    odd ? 'odd' : 'even',
+                    isInside(display) ? 'inside' : 'outside',
+                    isLast ? 'last' : '',
+                    isPick ? 'pick' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  style={
+                    {
+                      '--heat': String(heatT(stat.hits, maxHits)),
+                      animationDelay: `${i * 8}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  {pickRank != null && <em className="rank">{pickRank}</em>}
+                  <strong className="num">{display}</strong>
+                  <small className="hits">{stat.hits}</small>
+                </div>
+              )
+            })}
+          </div>
         </div>
-        <div className="tape">
+        <div className="tape" aria-label="Recent prints">
           {analysis.recent.slice(0, 20).map((r) => {
             const n = toDisplay(r.square)
             return (
               <span
                 key={r.id}
-                className={`tick ${isInside(n) ? 'in' : 'out'} ${pickSet.has(n) ? 'is-pick' : ''}`}
+                className={`tick ${n % 2 ? 'odd' : 'even'} ${isInside(n) ? 'in' : ''} ${pickSet.has(n) ? 'is-pick' : ''}`}
               >
                 {n}
               </span>
