@@ -1,9 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Buffer } from 'buffer'
 import './index.css'
 import App from './App.tsx'
 import Watch from './Watch.tsx'
 import { Gate } from './Gate.tsx'
+
+window.Buffer = Buffer
 
 const path = window.location.pathname.replace(/\/+$/, '') || '/'
 const Page = path === '/watch' ? Watch : App
