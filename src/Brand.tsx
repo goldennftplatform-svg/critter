@@ -2,10 +2,10 @@ export function BrandBar({ world }: { world: 'mine' | 'valdara' }) {
   return (
     <div className="brand-bar">
       <div className="brand-mark">
-        <img className="mascot" src="/critter-mascot.png" alt="" width={50} height={50} />
+        <img className="mascot" src="/brand/splash-logo.png" alt="" width={54} height={54} />
         <div>
-          <p className="eyebrow">Unofficial fan HQ · cartoons welcome</p>
-          <strong>CRITTERS QUEST</strong>
+          <p className="eyebrow">Unofficial fan HQ</p>
+          <img className="wordmark" src="/brand/wordmark.png" alt="Critters Quest" />
         </div>
       </div>
       <nav className="world-nav" aria-label="Worlds">

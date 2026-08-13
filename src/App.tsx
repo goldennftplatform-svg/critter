@@ -31,10 +31,11 @@ const WINDOWS = [
 
 const GRID = Array.from({ length: SQUARE_COUNT }, (_, i) => i + 1)
 
-/** 0–1 heat for roulette pocket glow (keeps numbers crisp). */
-function heatT(hits: number, maxHits: number) {
-  if (maxHits <= 0 || hits <= 0) return 0
-  return Math.min(hits / maxHits, 1)
+/** 0–1 heat stretched across this window's hit counts so the board actually moves when you change 100 / 500 / ALL. */
+function heatT(hits: number, minHits: number, maxHits: number) {
+  if (maxHits <= 0) return 0
+  if (maxHits === minHits) return hits > 0 ? 1 : 0
+  return Math.min(Math.max((hits - minHits) / (maxHits - minHits), 0), 1)
 }
 
 function outcomeClass(label: string) {
@@ -147,7 +148,9 @@ export default function App() {
   }
 
   const byDisplay = new Map(analysis.squares.map((s) => [s.square, s]))
-  const maxHits = Math.max(...analysis.squares.map((s) => s.hits), 1)
+  const hitCounts = analysis.squares.map((s) => s.hits)
+  const maxHits = Math.max(...hitCounts, 1)
+  const minHits = Math.min(...hitCounts)
   const pickSet = new Set(analysis.picks.map((p) => p.square))
   const expected = analysis.squares[0]?.expected || 4
   const last = analysis.recent[0]
@@ -328,23 +331,29 @@ export default function App() {
       <section className="board-sec">
         <div className="sec-head">
           <h2>Lucky table</h2>
-          <span>big # · tiny hits · center ring</span>
+          <span>
+            heat = hits in this window · cold {minHits}× → hot {maxHits}×
+          </span>
         </div>
         <div className="felt">
-          <div className="board" role="grid" aria-label="Lucky Pick board">
+          <div className="heat-legend" aria-hidden>
+            <i>cold</i>
+            <b />
+            <i>hot</i>
+          </div>
+          <div className="board" role="grid" aria-label="Lucky Pick heat map">
             {GRID.map((display, i) => {
               const stat = byDisplay.get(display)!
               const isLast = analysis.lastSquare === display
               const isPick = pickSet.has(display)
               const pickRank = analysis.picks.find((p) => p.square === display)?.rank
-              const odd = display % 2 === 1
+              const heat = heatT(stat.hits, minHits, maxHits)
               return (
                 <div
                   key={display}
                   role="gridcell"
                   className={[
                     'sq',
-                    odd ? 'odd' : 'even',
                     isInside(display) ? 'inside' : 'outside',
                     isLast ? 'last' : '',
                     isPick ? 'pick' : '',
@@ -353,7 +362,7 @@ export default function App() {
                     .join(' ')}
                   style={
                     {
-                      '--heat': String(heatT(stat.hits, maxHits)),
+                      '--heat': String(heat),
                       animationDelay: `${i * 8}ms`,
                     } as CSSProperties
                   }
@@ -369,10 +378,13 @@ export default function App() {
         <div className="tape" aria-label="Recent prints">
           {analysis.recent.slice(0, 20).map((r) => {
             const n = toDisplay(r.square)
+            const stat = byDisplay.get(n)
+            const heat = heatT(stat?.hits ?? 0, minHits, maxHits)
             return (
               <span
                 key={r.id}
-                className={`tick ${n % 2 ? 'odd' : 'even'} ${isInside(n) ? 'in' : ''} ${pickSet.has(n) ? 'is-pick' : ''}`}
+                className={`tick ${isInside(n) ? 'in' : ''} ${pickSet.has(n) ? 'is-pick' : ''}`}
+                style={{ '--heat': String(heat) } as CSSProperties}
               >
                 {n}
               </span>
