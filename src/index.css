@@ -189,6 +189,14 @@ h2,
   box-shadow: 0 0 0 1px var(--gold), 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
+.world-nav a.donate {
+  border-color: var(--gold);
+  color: var(--void);
+  background:
+    linear-gradient(180deg, rgba(255, 184, 74, 0.95), rgba(232, 148, 26, 0.92)),
+    url('/brand/button-texture.png') center / cover;
+}
+
 .btn {
   border: 2px solid var(--gold);
   border-radius: 0.55rem;

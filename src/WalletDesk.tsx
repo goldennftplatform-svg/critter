@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import './Watch.css'
 import { fmtSolTiny } from './lib/bps'
 import { critterPng, factionHue, fmtBoard, shortMaster } from './lib/faction'
-import { connectWallet } from './lib/wallet'
+import {
+  WALLET_EVENT,
+  connectWallet,
+  disconnectWallet,
+  getConnectedWallet,
+} from './lib/wallet'
 import type { WatchMaster, WatchPayload, WatchWallet } from './lib/watchTypes'
 
 export const TRACK_KEY = 'critter-watch-wallets'
@@ -189,6 +194,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
   const [data, setData] = useState<WatchPayload | null>(null)
   const [busy, setBusy] = useState(false)
   const [tracked, setTracked] = useState<string[]>(() => loadTracked())
+  const [connected, setConnected] = useState(() => getConnectedWallet())
   const [draft, setDraft] = useState('')
   const [addNote, setAddNote] = useState<string | null>(null)
 
@@ -231,18 +237,58 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
     }
     persist([wallet, ...tracked])
     setDraft('')
-    setAddNote('Pinned. Scanning the same desk as the whales…')
+    setAddNote('Pinned.')
   }
 
   async function addConnected() {
     setAddNote(null)
     try {
       const wallet = await connectWallet()
-      addWallet(wallet)
+      if (!tracked.includes(wallet)) addWallet(wallet)
+      await fetch('/api/gate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'login', wallet }),
+      })
     } catch (err) {
       setAddNote(err instanceof Error ? err.message : String(err))
     }
   }
+
+  async function dropConnected() {
+    const addr = connected || getConnectedWallet()
+    setAddNote(null)
+    try {
+      await disconnectWallet()
+      if (addr) persist(tracked.filter((x) => x !== addr))
+      await fetch('/api/gate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'logout' }),
+      })
+    } catch (err) {
+      setAddNote(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  function dropWallet(addr: string) {
+    if (addr === (connected || getConnectedWallet())) {
+      dropConnected()
+      return
+    }
+    persist(tracked.filter((x) => x !== addr))
+  }
+
+  useEffect(() => {
+    function onWallet(e: Event) {
+      const addr = (e as CustomEvent<string | null>).detail ?? getConnectedWallet()
+      setConnected(addr)
+    }
+    window.addEventListener(WALLET_EVENT, onWallet)
+    return () => window.removeEventListener(WALLET_EVENT, onWallet)
+  }, [])
 
   useEffect(() => {
     fetch('/api/gate', { credentials: 'same-origin' })
@@ -268,8 +314,8 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
   return (
     <section className={`wallet-desk ${teaser ? 'teaser' : ''}`}>
       <div className="sec-head">
-        <h2>{teaser ? 'Your desk (teaser)' : 'Your desk'}</h2>
-        <span>15 min preview · same roster as the OG whales</span>
+        <h2>Your desk</h2>
+        <span>Paste an address or connect Phantom</span>
       </div>
       <form
         className="watch-add"
@@ -291,9 +337,15 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
         <button type="submit" className="btn" disabled={busy}>
           Pin
         </button>
-        <button type="button" className="btn ghost" onClick={() => addConnected()} disabled={busy}>
-          Connect wallet
-        </button>
+        {connected ? (
+          <button type="button" className="btn ghost" onClick={() => dropConnected()} disabled={busy}>
+            Disconnect
+          </button>
+        ) : (
+          <button type="button" className="btn ghost" onClick={() => addConnected()} disabled={busy}>
+            Connect wallet
+          </button>
+        )}
         {addNote && <p className="watch-add-note">{addNote}</p>}
       </form>
 
@@ -303,7 +355,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
             <WalletCard
               key={w.id}
               w={w}
-              onRemove={(addr) => persist(tracked.filter((x) => x !== addr))}
+              onRemove={(addr) => dropWallet(addr)}
             />
           ))}
         </div>
@@ -319,8 +371,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
 
       {teaser && mine.length === 0 && (
         <p className="watch-add-note">
-          Pin your wallet to see SOL, board QUEST, BPS, rares, town, and every critter — same
-          layout as MF5 / USSA.
+          Pin your wallet to see SOL, board QUEST, BPS, rares, town, and every critter.
         </p>
       )}
     </section>

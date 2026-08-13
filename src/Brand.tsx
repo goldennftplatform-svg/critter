@@ -1,3 +1,5 @@
+import { DonateButton } from './Donate'
+
 export function BrandBar({ world }: { world: 'mine' | 'valdara' }) {
   return (
     <div className="brand-bar">
@@ -21,6 +23,7 @@ export function BrandBar({ world }: { world: 'mine' | 'valdara' }) {
         <a href="https://game.critters.quest/?spectate=1" target="_blank" rel="noreferrer">
           Spectate ↗
         </a>
+        <DonateButton className="donate" />
       </nav>
     </div>
   )

@@ -30,10 +30,7 @@ export default function Watch() {
         <div>
           <BrandBar world="valdara" />
           <h1>VALDARA HQ</h1>
-          <p className="watch-sub">
-            15 minute teaser: paste or connect a wallet and get the same desk as the OG whales.
-            Live map is free spectate — no keys.
-          </p>
+          <p className="watch-sub">Pin a wallet or connect Phantom. Same desk as MF5 and USSA.</p>
         </div>
         <div className="watch-actions">
           <a className="btn sync" href={spectate} target="_blank" rel="noreferrer">

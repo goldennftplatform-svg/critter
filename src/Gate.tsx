@@ -1,6 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import './Gate.css'
-import { connectWallet, hasWallet } from './lib/wallet'
+import {
+  WALLET_EVENT,
+  connectWallet,
+  disconnectWallet,
+  getConnectedWallet,
+  hasWallet,
+} from './lib/wallet'
 
 const IN_KEY = 'critter-in'
 
@@ -40,6 +46,7 @@ export function Gate({ children }: { children: ReactNode }) {
   const [hello, setHello] = useState(false)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [connected, setConnected] = useState(() => getConnectedWallet())
 
   async function load(extra?: Record<string, string>) {
     const res = await fetch('/api/gate', {
@@ -58,8 +65,19 @@ export function Gate({ children }: { children: ReactNode }) {
     load()
       .then((next) => {
         if (next.gated && !alreadyIn()) setHello(true)
+        if (next.wallet) setConnected(next.wallet)
       })
       .catch((err) => setNote(err instanceof Error ? err.message : String(err)))
+  }, [])
+
+  useEffect(() => {
+    function onWallet(e: Event) {
+      const addr = (e as CustomEvent<string | null>).detail ?? getConnectedWallet()
+      setConnected(addr)
+      setData((cur) => (cur ? { ...cur, wallet: addr } : cur))
+    }
+    window.addEventListener(WALLET_EVENT, onWallet)
+    return () => window.removeEventListener(WALLET_EVENT, onWallet)
   }, [])
 
   function dismiss() {
@@ -95,12 +113,32 @@ export function Gate({ children }: { children: ReactNode }) {
     }
   }
 
+  async function onDisconnect() {
+    setBusy(true)
+    setNote(null)
+    try {
+      await disconnectWallet()
+      await load({ action: 'logout' })
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const wallet = connected || data?.wallet || null
+
   return (
     <>
       {children}
 
-      {data?.gated && data.paid && data.wallet && !hello && (
-        <div className="gate-chip paid">{shortAddr(data.wallet)}</div>
+      {wallet && !hello && (
+        <div className="gate-chip paid">
+          <span>{shortAddr(wallet)}</span>
+          <button type="button" onClick={() => onDisconnect()} disabled={busy}>
+            {busy ? '…' : 'Disconnect'}
+          </button>
+        </div>
       )}
 
       {hello && (
