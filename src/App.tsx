@@ -210,52 +210,6 @@ export default function App() {
 
       {error && <p className="err">{error}</p>}
 
-      <section className="bps-desk">
-        <div className="sec-head">
-          <h2>BPS yield desk</h2>
-          <span>1% of every round · forever · no stake</span>
-        </div>
-        <div className="bps-grid">
-          <div>
-            <b>{bpsQuote.avgRoundSol.toFixed(2)}</b>
-            <span>avg pot SOL</span>
-          </div>
-          <div>
-            <b>{fmtSolTiny(bpsQuote.poolPerRound)}</b>
-            <span>1% pool / rd</span>
-          </div>
-          <div className="bps-hot">
-            <b>{fmtSolTiny(bpsQuote.per001PerRound)}</b>
-            <span>per 0.01 BPS / rd</span>
-          </div>
-          <div>
-            <b>{fmtSolTiny(bpsQuote.per001PerDay)}</b>
-            <span>per 0.01 / day</span>
-          </div>
-          <div>
-            <b>{fmtSolTiny(bpsQuote.per001PerYear)}</b>
-            <span>per 0.01 / year</span>
-          </div>
-          <div>
-            <b>
-              {mf5
-                ? `${fmtSolTiny(mf5.bpsYield?.perDay ?? 0)}`
-                : '—'}
-            </b>
-            <span>MF5 bag / day</span>
-          </div>
-        </div>
-        <p className="bps-note">
-          {bpsQuote.note}
-          {mf5
-            ? ` MF5 holds ${mf5.bpsSum.toFixed(3)} BPS ≈ ${fmtSolTiny(mf5.bpsYield?.perYear ?? 0)} SOL/yr at this pot.`
-            : ''}{' '}
-          Live table from last {bpsQuote.sample ?? 0} rounds.
-        </p>
-      </section>
-
-      <WalletDesk teaser />
-
       <section className="hero-hit">
         <div className="hero-copy">
           <p className="eyebrow">Last printed</p>
@@ -478,6 +432,52 @@ export default function App() {
           </div>
         )}
       </section>
+
+      <section className="bps-desk">
+        <div className="sec-head">
+          <h2>BPS yield desk</h2>
+          <span>1% of every round · forever · no stake</span>
+        </div>
+        <div className="bps-grid">
+          <div>
+            <b>{bpsQuote.avgRoundSol.toFixed(2)}</b>
+            <span>avg pot SOL</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.poolPerRound)}</b>
+            <span>1% pool / rd</span>
+          </div>
+          <div className="bps-hot">
+            <b>{fmtSolTiny(bpsQuote.per001PerRound)}</b>
+            <span>per 0.01 BPS / rd</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.per001PerDay)}</b>
+            <span>per 0.01 / day</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.per001PerYear)}</b>
+            <span>per 0.01 / year</span>
+          </div>
+          <div>
+            <b>
+              {mf5
+                ? `${fmtSolTiny(mf5.bpsYield?.perDay ?? 0)}`
+                : '—'}
+            </b>
+            <span>MF5 bag / day</span>
+          </div>
+        </div>
+        <p className="bps-note">
+          {bpsQuote.note}
+          {mf5
+            ? ` MF5 holds ${mf5.bpsSum.toFixed(3)} BPS ≈ ${fmtSolTiny(mf5.bpsYield?.perYear ?? 0)} SOL/yr at this pot.`
+            : ''}{' '}
+          Live table from last {bpsQuote.sample ?? 0} rounds.
+        </p>
+      </section>
+
+      <WalletDesk teaser />
 
       <section className="feed-sec">
         <button type="button" className="feed-btn" onClick={() => setShowFeed((v) => !v)}>
