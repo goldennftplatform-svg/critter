@@ -20,6 +20,7 @@ export type WatchMaster = {
   shield: string | null
   hat?: string | null
   amulet?: string | null
+  boots?: string | null
 }
 
 export type WatchRare = {

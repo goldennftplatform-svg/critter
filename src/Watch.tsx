@@ -3,7 +3,43 @@ import './Watch.css'
 import { BrandBar } from './Brand'
 import { fmtSolTiny } from './lib/bps'
 import { critterPng, factionHue, fmtBoard, shortMaster } from './lib/faction'
-import type { WatchPayload, WatchWallet } from './lib/watchTypes'
+import type { WatchMaster, WatchPayload, WatchWallet } from './lib/watchTypes'
+
+function isWorn(value: string | null | undefined) {
+  if (!value) return false
+  return !/^(none|null|0|-)$/i.test(value.trim())
+}
+
+function MasterCard({ m }: { m: WatchMaster }) {
+  const gear = [m.weapon, m.shield, m.hat, m.amulet, m.boots].filter(isWorn)
+  return (
+    <div className={`rmini ${factionHue(m.faction)}`}>
+      <img
+        className="rpic"
+        src={critterPng(m.name)}
+        alt={shortMaster(m.name)}
+        width={88}
+        height={88}
+      />
+      <div className="rbody">
+        <b>{shortMaster(m.name)}</b>
+        <span className="rsub">
+          {[m.species, m.faction, m.level ? `L${m.level}` : 'L0'].filter(Boolean).join(' · ')}
+        </span>
+        <div className="rstats">
+          <span className="atk">ATK {m.atk}</span>
+          <span>DEF {m.def}</span>
+          <span>HP {m.hp}</span>
+        </div>
+        <span className="rsub">
+          {m.bps ? `${m.bps.toFixed(3)} BPS` : 'no BPS'} · {fmtBoard(m.tokens)} board
+          {m.editions ? ` · ${m.editions} ed` : ''}
+        </span>
+        {gear.length > 0 && <span className="rgear">{gear.join(' · ')}</span>}
+      </div>
+    </div>
+  )
+}
 
 function WalletCard({ w }: { w: WatchWallet }) {
   const terronBits = Object.entries(w.terron || {})
@@ -102,25 +138,13 @@ function WalletCard({ w }: { w: WatchWallet }) {
       </div>
 
       {w.masters.length > 0 && (
-        <div className="roster" aria-label="Roster">
-          {w.masters.map((m) => (
-            <div className={`rmini ${factionHue(m.faction)}`} key={m.name}>
-              <img
-                className="rpic"
-                src={critterPng(m.name)}
-                alt={shortMaster(m.name)}
-                width={72}
-                height={72}
-              />
-              <b>{shortMaster(m.name)}</b>
-              <i>
-                {m.species ? `${m.species} · ` : ''}
-                <span className="atk">ATK {m.atk}</span>
-                {m.bps ? ` · ${m.bps.toFixed(3)} BPS` : ' · no BPS'}
-                {m.level ? ` · L${m.level}` : ' · L0'}
-              </i>
-            </div>
-          ))}
+        <div className="roster-wrap">
+          <p className="steps-label">Roster · {w.masters.length} critters</p>
+          <div className="roster" aria-label="Roster">
+            {w.masters.map((m) => (
+              <MasterCard key={m.name} m={m} />
+            ))}
+          </div>
         </div>
       )}
       <a className="map-btn" href={w.mapUrl} target="_blank" rel="noreferrer">
