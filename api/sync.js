@@ -1,3 +1,4 @@
+import { protect } from '../lib/gate.js'
 import { publicStatus, syncRounds } from './_lib.js'
 
 export default async function handler(req, res) {
@@ -6,6 +7,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'OPTIONS') return res.status(204).end()
+  if (await protect(req, res)) return
 
   const forceFull =
     req.method === 'POST'

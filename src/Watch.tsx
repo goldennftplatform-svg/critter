@@ -165,6 +165,7 @@ export default function Watch() {
     setBusy(true)
     try {
       const res = await fetch('/api/watch', { cache: 'no-store' })
+      if (res.status === 402) return
       const json = await res.json()
       if (!res.ok || !json.success) throw new Error(json.error || `Watch ${res.status}`)
       setData(json.data)

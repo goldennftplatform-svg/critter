@@ -57,6 +57,7 @@ export default function App() {
 
   async function loadCache() {
     const res = await fetch('/api/cache')
+    if (res.status === 402) return
     if (!res.ok) throw new Error(`Cache ${res.status}`)
     const json = await res.json()
     setRounds(json.data.rounds ?? [])

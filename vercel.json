@@ -9,6 +9,7 @@
     "api/cache.js": { "maxDuration": 60 },
     "api/sync.js": { "maxDuration": 60 },
     "api/status.js": { "maxDuration": 15 },
-    "api/watch.js": { "maxDuration": 30 }
+    "api/watch.js": { "maxDuration": 30 },
+    "api/gate.js": { "maxDuration": 30 }
   }
 }

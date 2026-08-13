@@ -1,3 +1,4 @@
+import { handleGate, protect } from '../lib/gate.js'
 import express from 'express'
 import cors from 'cors'
 import fs from 'fs/promises'
@@ -180,14 +181,26 @@ function publicStatus() {
 }
 
 const app = express()
-app.use(cors())
+app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
+
+app.all('/api/gate', async (req, res) => {
+  try {
+    await handleGate(req, res)
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
 
 app.get('/api/status', (_req, res) => {
   res.json({ success: true, data: publicStatus() })
 })
 
-app.get('/api/cache', (_req, res) => {
+app.get('/api/cache', async (req, res) => {
+  if (await protect(req, res)) return
   res.json({
     success: true,
     data: {
@@ -198,6 +211,7 @@ app.get('/api/cache', (_req, res) => {
 })
 
 app.post('/api/sync', async (req, res) => {
+  if (await protect(req, res)) return
   const forceFull = Boolean(req.body?.full)
   const result = await syncRounds({ forceFull })
   res.json({
@@ -207,6 +221,7 @@ app.post('/api/sync', async (req, res) => {
 })
 
 app.get('/api/watch', async (req, res) => {
+  if (await protect(req, res)) return
   try {
     const { snapshotWatchlist, WATCHLIST } = await import('../lib/watchSnapshot.js')
     const id = typeof req.query?.id === 'string' ? req.query.id : null
