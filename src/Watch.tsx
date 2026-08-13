@@ -1,43 +1,99 @@
 import { useEffect, useState } from 'react'
 import './Watch.css'
+import { BrandBar } from './Brand'
+import { fmtSolTiny } from './lib/bps'
+import { critterPng, factionHue, fmtBoard, shortMaster } from './lib/faction'
 import type { WatchPayload, WatchWallet } from './lib/watchTypes'
 
-function fmt(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 10_000) return `${Math.round(n / 1000)}k`
-  return Math.round(n).toLocaleString('en-US')
-}
-
 function WalletCard({ w }: { w: WatchWallet }) {
+  const terronBits = Object.entries(w.terron || {})
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .map(([n, c]) => `#${n}×${c}`)
+  const town = w.towns?.[0]
+
   return (
-    <article className="wcard">
+    <article className={`wcard ${w.id}`}>
       <div className="wcard-head">
-        <h2>{w.label}</h2>
-        <span className="tag">{w.masterCount} masters</span>
+        {w.masters[0] && (
+          <img
+            className="whero"
+            src={critterPng(w.masters[0].name)}
+            alt=""
+            width={88}
+            height={88}
+          />
+        )}
+        <div>
+          <h2>{w.label}</h2>
+          <span className="tag">{w.masterCount} masters</span>
+        </div>
       </div>
       <p className="wcard-tagline">{w.tagline}</p>
       <div className="wcard-stats">
-        <div>
-          <b>{w.sol.toFixed(2)}</b>
+            <div>
+          <b className={w.sol < 0.45 ? 'warn' : ''}>{w.sol.toFixed(2)}</b>
           <span>SOL</span>
         </div>
         <div>
-          <b>{fmt(w.boardQuest)}</b>
+          <b>{fmtBoard(w.boardQuest)}</b>
           <span>Board</span>
         </div>
         <div>
-          <b>{w.bpsSum > 0 ? `${w.bpsSum.toFixed(2)}%` : '—'}</b>
+          <b>{w.bpsSum > 0 ? w.bpsSum.toFixed(3) : '—'}</b>
           <span>BPS</span>
         </div>
         <div>
-          <b>{w.editionsTotal}</b>
-          <span>Clones</span>
+          <b>{w.bpsYield ? fmtSolTiny(w.bpsYield.perDay) : '—'}</b>
+          <span>SOL/day est</span>
         </div>
       </div>
 
+      {w.boxes && (
+        <div className={`box-desk ${w.boxes.verdict}`}>
+          <p className="steps-label">Blind Box desk</p>
+          <strong>{w.boxes.headline}</strong>
+          <p>{w.boxes.inventory || w.boxes.chain}</p>
+          <p className="box-move">{w.boxes.move}</p>
+          <p className="box-why">{w.boxes.detail}</p>
+        </div>
+      )}
+
+      {w.rares.length > 0 && (
+        <div className="rare-desk">
+          <p className="steps-label">Super rares</p>
+          {w.rares.map((r) => (
+            <div className={`rare ${r.tier}`} key={`${r.on}-${r.slot}-${r.name}`}>
+              <b>{r.name}</b>
+              <i>
+                {r.tier} · {r.slot}
+                {r.stats ? ` · ${r.stats}` : ''} · {shortMaster(r.on)}
+              </i>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {town && (
+        <div className="town-chip">
+          <b>{town.name}</b>
+          <span>
+            {town.zone} · L{town.level} · Bank {town.bank || '—'} · Walls {town.walls || '—'}
+          </span>
+        </div>
+      )}
+
+      {w.terronTotal > 0 && (
+        <p className="terron-line">
+          Terron {w.terronTotal} shards {terronBits.join(' ')}
+          {w.terronHotMissing.length
+            ? ` · missing hot #${w.terronHotMissing.join(' & #')}`
+            : ' · 0/8 on-hand'}
+        </p>
+      )}
+
       <p className="steps-label">Next steps</p>
       <div className="steps">
-        {w.nextSteps.slice(0, 5).map((s) => (
+        {w.nextSteps.slice(0, 6).map((s) => (
           <div className={`step ${s.priority}`} key={s.title}>
             <strong>{s.title}</strong>
             <p>{s.detail}</p>
@@ -48,23 +104,26 @@ function WalletCard({ w }: { w: WatchWallet }) {
       {w.masters.length > 0 && (
         <div className="roster" aria-label="Roster">
           {w.masters.map((m) => (
-            <div className="rmini" key={m.name}>
-              <b>{m.name.replace('Critters ', '')}</b>
+            <div className={`rmini ${factionHue(m.faction)}`} key={m.name}>
+              <img
+                className="rpic"
+                src={critterPng(m.name)}
+                alt={shortMaster(m.name)}
+                width={72}
+                height={72}
+              />
+              <b>{shortMaster(m.name)}</b>
               <i>
+                {m.species ? `${m.species} · ` : ''}
                 <span className="atk">ATK {m.atk}</span>
-                {m.bps ? ` · BPS` : ''}
+                {m.bps ? ` · ${m.bps.toFixed(3)} BPS` : ' · no BPS'}
                 {m.level ? ` · L${m.level}` : ' · L0'}
               </i>
             </div>
           ))}
         </div>
       )}
-      <a
-        className="map-btn"
-        href={w.mapUrl}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <a className="map-btn" href={w.mapUrl} target="_blank" rel="noreferrer">
         Live map · spectate
       </a>
       <p className="wcard-foot">{w.shortWallet}</p>
@@ -104,19 +163,21 @@ export default function Watch() {
     return (
       <div className="boot">
         <div className="spinner" />
-        <span>Scouting wallets…</span>
+        <span>Scouting Valdara…</span>
       </div>
     )
   }
+
+  const q = data?.bpsQuote
 
   return (
     <div className="watch">
       <header className="watch-top">
         <div>
-          <p className="eyebrow">Public roster radar</p>
-          <h1>WATCH</h1>
+          <BrandBar world="valdara" />
+          <h1>VALDARA HQ</h1>
           <p className="watch-sub">
-            On-chain roster + next moves. Live Valdara map via free spectate — no account.
+            Public roster, rares, and box strat. Live map is free spectate — no keys, no login.
           </p>
         </div>
         <div className="watch-actions">
@@ -129,13 +190,31 @@ export default function Watch() {
             Map
           </a>
           <button type="button" className="btn ghost" onClick={() => load()} disabled={busy}>
-            {busy ? '…' : 'Refresh'}
+            {busy ? '…' : 'Rescan'}
           </button>
-          <a className="btn ghost" href="/">
-            ← Optimiser
-          </a>
         </div>
       </header>
+
+      {q && (
+        <section className="bps-strip">
+          <div>
+            <b>{q.avgRoundSol.toFixed(2)} SOL</b>
+            <span>live pot</span>
+          </div>
+          <div className="hot">
+            <b>{fmtSolTiny(q.per001PerRound)}</b>
+            <span>per 0.01 BPS / rd</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(q.per001PerDay)}</b>
+            <span>per 0.01 / day</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(q.per001PerYear)}</b>
+            <span>per 0.01 / year</span>
+          </div>
+        </section>
+      )}
 
       {error && <p className="watch-err">{error}</p>}
       {data?.note && <p className="watch-note">{data.note}</p>}
@@ -145,14 +224,6 @@ export default function Watch() {
           <WalletCard key={w.id} w={w} />
         ))}
       </div>
-
-      <section className="watch-saas">
-        <h3>Later: opt-in Watch</h3>
-        <p>
-          Drop a wallet → get a live next-steps board + alerts. You never hand over keys — public
-          scoreboard only. Subscribe-style PAaS when we wire waitlist.
-        </p>
-      </section>
     </div>
   )
 }

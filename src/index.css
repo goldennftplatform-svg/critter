@@ -1,28 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wdth,wght@75..125,400..700&family=Luckiest+Guy&family=Nunito:wght@600;800&display=swap');
 
 :root {
-  --bg-0: #100e0c;
-  --bg-1: #1a1511;
-  --ink: #f6ebdc;
-  --ink-dim: #b9a48c;
-  --ink-faint: #7d6b56;
-  --copper: #d4894a;
-  --copper-hot: #f2a85e;
-  --brass: #d4af37;
-  --due: #7ec4d4;
-  --danger: #d06548;
-  --ok: #8fbc6b;
-  --line: rgba(246, 235, 220, 0.1);
-  --glow: rgba(242, 168, 94, 0.28);
-  --panel: rgba(22, 17, 13, 0.82);
-  --font-display: 'Bricolage Grotesque', Georgia, serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --mint: #74fde7;
+  --teal: #5ce6d0;
+  --forest: #23740d;
+  --grove: #235615;
+  --gold: #ffb84a;
+  --gold-hot: #ffe08a;
+  --void: #2a1810;
+  --bg-0: #7ec8ff;
+  --bg-1: #fff6dc;
+  --ink: #2a1810;
+  --ink-dim: #5c3d28;
+  --ink-faint: #8a6548;
+  --copper: var(--gold);
+  --copper-hot: #e8941a;
+  --brass: #e8941a;
+  --due: #1f7a9c;
+  --danger: #d4452f;
+  --ok: #2f8f3a;
+  --line: #2a1810;
+  --glow: rgba(255, 184, 74, 0.45);
+  --panel: #fff6dc;
+  --sunfire: #ffb84a;
+  --verdant: #3cb86a;
+  --torrent: #3db7d4;
+  --mudclaw: #c4783a;
+  --bloodmoon: #e85d4c;
+  --font-display: 'Luckiest Guy', 'Fredoka', system-ui, sans-serif;
+  --font-body: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --font-mono: 'Nunito', ui-rounded, sans-serif;
   --pad: max(0.85rem, env(safe-area-inset-left));
   --pad-r: max(0.85rem, env(safe-area-inset-right));
   --pad-b: max(1.25rem, env(safe-area-inset-bottom));
+  --stroke: 4px;
+  --nudge: 5px;
   color: var(--ink);
-  background: var(--bg-0);
-  font-family: var(--font-display);
+  background: #7ec8ff;
+  font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -47,10 +62,13 @@ html {
 
 body {
   min-width: 320px;
-  background:
-    radial-gradient(900px 420px at 0% -5%, rgba(212, 137, 74, 0.22), transparent 55%),
-    radial-gradient(700px 380px at 100% 0%, rgba(126, 196, 212, 0.1), transparent 50%),
-    linear-gradient(180deg, #1a1410 0%, var(--bg-0) 45%, #0b0908 100%);
+  color: var(--ink);
+  background-color: #6ec4ff;
+  background-image:
+    linear-gradient(180deg, rgba(126, 200, 255, 0.28) 0%, rgba(58, 163, 90, 0.45) 70%, rgba(42, 24, 16, 0.35) 100%),
+    url('/valdara-meadow.png');
+  background-size: cover;
+  background-position: center top;
   background-attachment: fixed;
   overscroll-behavior-y: none;
 }
@@ -60,8 +78,9 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.055;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.18;
+  background-image: radial-gradient(#fff8 1.2px, transparent 1.6px);
+  background-size: 18px 18px;
   z-index: 0;
 }
 
@@ -74,5 +93,122 @@ button {
 }
 
 a {
-  color: var(--copper-hot);
+  color: #0b6b4a;
+}
+
+h1,
+h2,
+.logo,
+.brand-mark strong {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+/* —— fan brand bar —— */
+.brand-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-mark .paw,
+.brand-mark img.mascot {
+  width: 3.1rem;
+  height: 3.1rem;
+  border: var(--stroke) solid var(--void);
+  border-radius: 1.1rem;
+  background: #ffe08a;
+  box-shadow: 4px 4px 0 var(--void);
+  object-fit: cover;
+}
+
+.brand-mark strong {
+  display: block;
+  font-size: clamp(1.15rem, 5vw, 1.55rem);
+  line-height: 0.95;
+  color: #fff8e4;
+  text-shadow:
+    3px 3px 0 var(--void),
+    -2px 0 0 var(--void),
+    2px 0 0 var(--void),
+    0 -2px 0 var(--void);
+}
+
+.brand-mark .eyebrow {
+  color: #fff8e4;
+  text-shadow: 1px 1px 0 var(--void);
+}
+
+.world-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.world-nav a {
+  min-height: 2.15rem;
+  padding: 0.28rem 0.7rem;
+  border: 3px solid var(--void);
+  border-radius: 999px;
+  background: #fff6dc;
+  color: var(--void);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 var(--void);
+}
+
+.world-nav a.on {
+  background: var(--gold);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--void);
+}
+
+.btn {
+  border: 3px solid var(--void);
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--void);
+  padding: 0.45rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--void);
+}
+
+.btn.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--void);
+}
+
+.sticker {
+  background: var(--panel);
+  border: var(--stroke) solid var(--void);
+  border-radius: 1.4rem;
+  box-shadow: var(--nudge) var(--nudge) 0 var(--void);
 }

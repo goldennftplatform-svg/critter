@@ -1,5 +1,6 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import './App.css'
+import { BrandBar } from './Brand'
 import {
   analyze,
   formatPct,
@@ -9,12 +10,14 @@ import {
   SQUARE_COUNT,
   toDisplay,
 } from './lib/analysis'
+import { fmtSolTiny, quoteFromDeployed } from './lib/bps'
 import {
   displayMotherlode,
   displayOutcome,
   formatQuest,
 } from './lib/format'
 import type { Analysis, CachedRound, CacheStatus } from './lib/types'
+import type { WatchPayload } from './lib/watchTypes'
 
 const WINDOWS = [
   { label: '100', value: 100 },
@@ -49,6 +52,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [showFeed, setShowFeed] = useState(false)
+  const [watch, setWatch] = useState<WatchPayload | null>(null)
 
   async function loadCache() {
     const res = await fetch('/api/cache')
@@ -95,6 +99,12 @@ export default function App() {
       }
     })()
     // Pull fresh rounds often — Lucky Pick settles ~every minute
+    fetch('/api/watch', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => {
+        if (alive && j.success) setWatch(j.data)
+      })
+      .catch(() => {})
     const poll = setInterval(() => {
       pullFresh(false, { quiet: true }).catch(() => {})
     }, 12_000)
@@ -108,6 +118,12 @@ export default function App() {
     setAnalysis(analyze(rounds, windowSize))
   }, [rounds, windowSize])
 
+  const bpsQuote = useMemo(() => {
+    const sample = rounds.slice(0, windowSize || rounds.length).slice(0, 200)
+    return quoteFromDeployed(sample.map((r) => r.deployed))
+  }, [rounds, windowSize])
+  const mf5 = watch?.wallets.find((w) => w.id === 'mf5')
+
   if (loading) {
     return (
       <div className="boot">
@@ -120,7 +136,7 @@ export default function App() {
   if (!analysis || rounds.length === 0) {
     return (
       <div className="boot">
-        <h1 className="logo">BLOCK OPTIMISER</h1>
+        <h1 className="logo">LUCKY PICK</h1>
         <p>No rounds cached yet.</p>
         {error && <p className="err">{error}</p>}
         <button className="btn" onClick={() => sync(true)} disabled={syncing}>
@@ -149,10 +165,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="top">
+        <BrandBar world="mine" />
         <div className="top-main">
           <div>
-            <p className="eyebrow">Not fin advice</p>
-            <h1 className="logo">BLOCK OPTIMISER</h1>
+            <p className="eyebrow">Not fin advice · fan terminal</p>
+            <h1 className="logo">LUCKY PICK</h1>
           </div>
           <button
             className="btn sync"
@@ -185,6 +202,50 @@ export default function App() {
       </header>
 
       {error && <p className="err">{error}</p>}
+
+      <section className="bps-desk">
+        <div className="sec-head">
+          <h2>BPS yield desk</h2>
+          <span>1% of every round · forever · no stake</span>
+        </div>
+        <div className="bps-grid">
+          <div>
+            <b>{bpsQuote.avgRoundSol.toFixed(2)}</b>
+            <span>avg pot SOL</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.poolPerRound)}</b>
+            <span>1% pool / rd</span>
+          </div>
+          <div className="bps-hot">
+            <b>{fmtSolTiny(bpsQuote.per001PerRound)}</b>
+            <span>per 0.01 BPS / rd</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.per001PerDay)}</b>
+            <span>per 0.01 / day</span>
+          </div>
+          <div>
+            <b>{fmtSolTiny(bpsQuote.per001PerYear)}</b>
+            <span>per 0.01 / year</span>
+          </div>
+          <div>
+            <b>
+              {mf5
+                ? `${fmtSolTiny(mf5.bpsYield?.perDay ?? 0)}`
+                : '—'}
+            </b>
+            <span>MF5 bag / day</span>
+          </div>
+        </div>
+        <p className="bps-note">
+          {bpsQuote.note}
+          {mf5
+            ? ` MF5 holds ${mf5.bpsSum.toFixed(3)} BPS ≈ ${fmtSolTiny(mf5.bpsYield?.perYear ?? 0)} SOL/yr at this pot.`
+            : ''}{' '}
+          Live table from last {bpsQuote.sample ?? 0} rounds.
+        </p>
+      </section>
 
       <section className="hero-hit">
         <div className="hero-copy">
@@ -405,11 +466,11 @@ export default function App() {
           {showFeed ? 'Hide feed' : 'Round feed'}
           <span>{analysis.recent.length}</span>
         </button>
-        <p className="disclaimer">Read board only · play on mine.critters.quest</p>
+        <p className="disclaimer">Fan terminal · play on mine.critters.quest · not affiliated</p>
       </section>
 
       <footer className="site-foot">
-        <a href="/watch">Watch · roster radar</a>
+        <a href="/watch">Valdara · roster HQ</a>
       </footer>
 
       {showFeed && (
