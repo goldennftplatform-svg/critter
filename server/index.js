@@ -11,6 +11,8 @@ const CACHE_FILE = path.join(DATA_DIR, 'rounds.json')
 const SOURCE = 'https://mine.critters.quest/api/rounds'
 const PORT = Number(process.env.PORT) || 3789
 const SYNC_MS = 15_000
+const FULL_LIMIT = Number(process.env.ROUNDS_LIMIT) || 5000
+const INCR_LIMIT = 200
 
 /**
  * @typedef {{
@@ -125,24 +127,26 @@ async function syncRounds({ forceFull = false } = {}) {
   if (cache.syncing) return { ok: false, reason: 'already_syncing' }
   cache.syncing = true
   try {
-    const limit = forceFull || cache.rounds.length === 0 ? 8000 : 200
+    const needDeep =
+      forceFull || cache.rounds.length === 0 || cache.rounds.length < FULL_LIMIT * 0.9
+    const limit = needDeep ? FULL_LIMIT : INCR_LIMIT
     const incoming = await fetchRemoteRounds(limit)
     const { rounds, added } = mergeRounds(cache.rounds, incoming)
 
-    // If incremental miss (gap), pull full history once
-    if (!forceFull && cache.rounds.length > 0 && added > 0) {
+    // If incremental miss (gap), pull deep history once
+    if (!needDeep && cache.rounds.length > 0 && added > 0) {
       const newestLocal = cache.rounds[0]?.id ?? 0
       const newestRemote = incoming[0]?.id ?? 0
       const expectedNew = Math.max(0, newestRemote - newestLocal)
-      if (added < expectedNew || rounds.length < newestRemote) {
-        const full = await fetchRemoteRounds(8000)
+      if (added < expectedNew) {
+        const full = await fetchRemoteRounds(FULL_LIMIT)
         const merged = mergeRounds(rounds, full)
-        cache.rounds = merged.rounds
+        cache.rounds = merged.rounds.slice(0, FULL_LIMIT)
       } else {
-        cache.rounds = rounds
+        cache.rounds = rounds.slice(0, FULL_LIMIT)
       }
     } else {
-      cache.rounds = rounds
+      cache.rounds = rounds.slice(0, FULL_LIMIT)
     }
 
     cache.updatedAt = new Date().toISOString()

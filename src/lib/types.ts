@@ -75,6 +75,7 @@ export type Analysis = {
     parity: PatternBucket[]
     thirds: PatternBucket[]
     highLow: PatternBucket[]
+    ring: PatternBucket[]
     rows: PatternBucket[]
     cols: PatternBucket[]
   }

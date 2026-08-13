@@ -26,6 +26,18 @@ export function highLowOf(display: number): 'low' | 'high' {
   return display <= 12 ? 'low' : 'high'
 }
 
+/** Center 3×3 on the 1–25 board: 7–9, 12–14, 17–19 */
+export const INSIDE_SQUARES = [7, 8, 9, 12, 13, 14, 17, 18, 19] as const
+const INSIDE_SET = new Set<number>(INSIDE_SQUARES)
+
+export function ringOf(display: number): 'inside' | 'outside' {
+  return INSIDE_SET.has(display) ? 'inside' : 'outside'
+}
+
+export function isInside(display: number) {
+  return INSIDE_SET.has(display)
+}
+
 function streakFor(
   roundsNewestFirst: CachedRound[],
   pred: (display: number) => boolean,
@@ -136,6 +148,8 @@ export function analyze(roundsNewestFirst: CachedRound[], windowSize: number): A
   const highs = DISPLAY_SQUARES.filter((n) => highLowOf(n) === 'high')
   const evens = DISPLAY_SQUARES.filter((n) => parityOf(n) === 'even')
   const odds = DISPLAY_SQUARES.filter((n) => parityOf(n) === 'odd')
+  const insides = DISPLAY_SQUARES.filter((n) => ringOf(n) === 'inside')
+  const outsides = DISPLAY_SQUARES.filter((n) => ringOf(n) === 'outside')
 
   const patterns = {
     parity: [
@@ -150,6 +164,10 @@ export function analyze(roundsNewestFirst: CachedRound[], windowSize: number): A
     highLow: [
       bucket('low', 'Low (1–12)', lows, slice, roundsNewestFirst),
       bucket('high', 'High (13–25)', highs, slice, roundsNewestFirst),
+    ],
+    ring: [
+      bucket('inside', 'Inside (center 9)', insides, slice, roundsNewestFirst),
+      bucket('outside', 'Outside (rim 16)', outsides, slice, roundsNewestFirst),
     ],
     rows: [0, 1, 2, 3, 4].map((row) =>
       bucket(

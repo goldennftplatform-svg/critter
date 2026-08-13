@@ -1,8 +1,9 @@
 const SOURCE = 'https://mine.critters.quest/api/rounds'
 
-/** @type {{ updatedAt: string | null, rounds: any[], lastSyncError: string | null }} */
+/** @type {{ updatedAt: string | null, lastDeepSyncAt: string | null, rounds: any[], lastSyncError: string | null }} */
 const g = globalThis.__critterCache ?? {
   updatedAt: null,
+  lastDeepSyncAt: null,
   rounds: [],
   lastSyncError: null,
 }
@@ -67,26 +68,37 @@ export function publicStatus() {
   }
 }
 
-/** Upstream payloads are fat (winners arrays). Cap hard on serverless. */
-const FULL_LIMIT = Number(process.env.ROUNDS_LIMIT) || 500
-const INCR_LIMIT = 80
+/** Slim cache target. Upstream JSON is fat (~46MB @ 5k) before we slim. */
+const FULL_LIMIT = Number(process.env.ROUNDS_LIMIT) || 5000
+const INCR_LIMIT = 120
 const STALE_MS = 12_000
+/** Re-pull deep history if cache is thin or older than this. */
+const DEEP_SYNC_MS = 30 * 60_000
 
 export function isCacheStale() {
   if (!g.updatedAt || g.rounds.length === 0) return true
   return Date.now() - new Date(g.updatedAt).getTime() > STALE_MS
 }
 
+function needsDeepSync() {
+  if (g.rounds.length < FULL_LIMIT * 0.9) return true
+  if (!g.updatedAt) return true
+  // Deep sync marker lives on the global cache
+  const lastDeep = g.lastDeepSyncAt ? new Date(g.lastDeepSyncAt).getTime() : 0
+  return Date.now() - lastDeep > DEEP_SYNC_MS
+}
+
 export async function syncRounds({ forceFull = false } = {}) {
   try {
-    const limit = forceFull || g.rounds.length === 0 ? FULL_LIMIT : INCR_LIMIT
+    const deep = forceFull || g.rounds.length === 0 || needsDeepSync()
+    const limit = deep ? FULL_LIMIT : INCR_LIMIT
     const incoming = await fetchRemoteRounds(limit)
     const { rounds, added } = mergeRounds(g.rounds, incoming)
-    // Keep memory bounded on warm lambdas
     g.rounds = rounds.slice(0, FULL_LIMIT)
     g.updatedAt = new Date().toISOString()
+    if (deep) g.lastDeepSyncAt = g.updatedAt
     g.lastSyncError = null
-    return { ok: true, count: g.rounds.length, added }
+    return { ok: true, count: g.rounds.length, added, deep }
   } catch (err) {
     g.lastSyncError = err instanceof Error ? err.message : String(err)
     return { ok: false, reason: g.lastSyncError }
@@ -95,8 +107,10 @@ export async function syncRounds({ forceFull = false } = {}) {
 
 /** Cheap refresh used by /api/cache — only hits upstream when stale. */
 export async function ensureFresh() {
-  if (!isCacheStale()) return { ok: true, skipped: true, count: g.rounds.length }
-  return syncRounds({ forceFull: g.rounds.length === 0 })
+  if (!isCacheStale() && g.rounds.length >= Math.min(500, FULL_LIMIT)) {
+    return { ok: true, skipped: true, count: g.rounds.length }
+  }
+  return syncRounds({ forceFull: g.rounds.length < FULL_LIMIT * 0.9 })
 }
 
 export function getCache() {

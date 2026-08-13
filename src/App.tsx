@@ -4,6 +4,7 @@ import {
   analyze,
   formatPct,
   formatSol,
+  isInside,
   shortTime,
   SQUARE_COUNT,
   toDisplay,
@@ -16,11 +17,12 @@ import {
 import type { Analysis, CachedRound, CacheStatus } from './lib/types'
 
 const WINDOWS = [
-  { label: '25', value: 25 },
-  { label: '50', value: 50 },
   { label: '100', value: 100 },
   { label: '250', value: 250 },
   { label: '500', value: 500 },
+  { label: '1k', value: 1000 },
+  { label: '2.5k', value: 2500 },
+  { label: '5k', value: 5000 },
   { label: 'ALL', value: 0 },
 ] as const
 
@@ -49,7 +51,7 @@ function outcomeClass(label: string) {
 export default function App() {
   const [rounds, setRounds] = useState<CachedRound[]>([])
   const [status, setStatus] = useState<CacheStatus | null>(null)
-  const [windowSize, setWindowSize] = useState(100)
+  const [windowSize, setWindowSize] = useState(500)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -139,9 +141,9 @@ export default function App() {
   const byDisplay = new Map(analysis.squares.map((s) => [s.square, s]))
   const maxHits = Math.max(...analysis.squares.map((s) => s.hits), 1)
   const pickSet = new Set(analysis.picks.map((p) => p.square))
-  const fair = 1 / SQUARE_COUNT
   const expected = analysis.squares[0]?.expected || 4
   const last = analysis.recent[0]
+  const [inside, outside] = analysis.patterns.ring
   const leanBuckets = [
     ...analysis.patterns.parity,
     ...analysis.patterns.highLow,
@@ -150,7 +152,7 @@ export default function App() {
   const gridLeans = [...analysis.patterns.rows, ...analysis.patterns.cols]
     .map((b) => ({ ...b, delta: b.share - b.expected }))
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
-    .slice(0, 4)
+    .slice(0, 3)
 
   return (
     <div className="app">
@@ -199,6 +201,9 @@ export default function App() {
           <p className="hero-sub">
             #{last?.id} · {last ? formatSol(last.deployed, 2) : '—'} SOL ·{' '}
             {last ? displayOutcome(last) : '—'}
+            {analysis.lastSquare != null
+              ? ` · ${isInside(analysis.lastSquare) ? 'IN' : 'OUT'}`
+              : ''}
           </p>
           <p className="hero-time">{shortTime(last?.ts ?? null)}</p>
         </div>
@@ -208,13 +213,39 @@ export default function App() {
             <span>window</span>
           </div>
           <div>
-            <b>{formatPct(fair)}</b>
-            <span>fair/sq</span>
+            <b>{status?.count ?? rounds.length}</b>
+            <span>cached</span>
           </div>
           <div>
             <b>{analysis.picks[0]?.square ?? '—'}</b>
             <span>top play</span>
           </div>
+        </div>
+      </section>
+
+      <section className="ring-sec">
+        <div className="sec-head">
+          <h2>Inside / Outside</h2>
+          <span>center 9 vs rim 16 · fair {formatPct(9 / 25)} / {formatPct(16 / 25)}</span>
+        </div>
+        <div className="ring-duo">
+          {[inside, outside].map((b) => {
+            const delta = b.share - b.expected
+            return (
+              <div className={`ring-card ${b.key}`} key={b.key}>
+                <span className="ring-label">{b.key === 'inside' ? 'Inside' : 'Outside'}</span>
+                <strong className={delta >= 0 ? 'up' : 'down'}>{formatPct(b.share)}</strong>
+                <span className="ring-meta">
+                  {b.hits}× · fair {formatPct(b.expected)}
+                  {b.streak > 1 ? ` · streak ×${b.streak}` : ''}
+                </span>
+                <div className="lean-bar">
+                  <i style={{ width: `${Math.min(b.share * 100, 100)}%` }} />
+                  <em style={{ left: `${b.expected * 100}%` }} />
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
 
@@ -244,7 +275,7 @@ export default function App() {
       <section className="board-sec">
         <div className="sec-head">
           <h2>Board</h2>
-          <span>hot · cold · pick ring</span>
+          <span>center ring lit · pick outline</span>
         </div>
         <div className="board">
           {GRID.map((display, i) => {
@@ -255,7 +286,12 @@ export default function App() {
             return (
               <div
                 key={display}
-                className={['sq', isLast ? 'last' : '', isPick ? 'pick' : '']
+                className={[
+                  'sq',
+                  isInside(display) ? 'inside' : 'outside',
+                  isLast ? 'last' : '',
+                  isPick ? 'pick' : '',
+                ]
                   .filter(Boolean)
                   .join(' ')}
                 style={{
@@ -271,12 +307,12 @@ export default function App() {
           })}
         </div>
         <div className="tape">
-          {analysis.recent.slice(0, 24).map((r) => {
+          {analysis.recent.slice(0, 20).map((r) => {
             const n = toDisplay(r.square)
             return (
               <span
                 key={r.id}
-                className={`tick ${n % 2 ? 'odd' : 'even'} ${pickSet.has(n) ? 'is-pick' : ''}`}
+                className={`tick ${isInside(n) ? 'in' : 'out'} ${pickSet.has(n) ? 'is-pick' : ''}`}
               >
                 {n}
               </span>
@@ -292,8 +328,8 @@ export default function App() {
             <span>hits</span>
           </div>
           <div className="chip-row">
-            {analysis.hot.slice(0, 6).map((s) => (
-              <span key={s.square} className="chip hot">
+            {analysis.hot.slice(0, 5).map((s) => (
+              <span key={s.square} className={`chip hot ${isInside(s.square) ? 'in' : ''}`}>
                 <b>{s.square}</b>
                 <i>{s.hits}×</i>
               </span>
@@ -306,8 +342,8 @@ export default function App() {
             <span>gap</span>
           </div>
           <div className="chip-row">
-            {analysis.due.slice(0, 6).map((s) => (
-              <span key={s.square} className="chip due">
+            {analysis.due.slice(0, 5).map((s) => (
+              <span key={s.square} className={`chip due ${isInside(s.square) ? 'in' : ''}`}>
                 <b>{s.square}</b>
                 <i>{s.gap}</i>
               </span>
@@ -318,8 +354,8 @@ export default function App() {
 
       <section className="leans-sec">
         <div className="sec-head">
-          <h2>Lean</h2>
-          <span>vs fair share</span>
+          <h2>Other leans</h2>
+          <span>odd/even · high/low · thirds</span>
         </div>
         <div className="leans">
           {leanBuckets.map((b) => {
@@ -353,14 +389,16 @@ export default function App() {
             )
           })}
         </div>
-        <div className="grid-leans">
-          {gridLeans.map((b) => (
-            <span key={b.key} className={`gchip ${b.delta >= 0 ? 'up' : 'down'}`}>
-              <b>{b.label}</b>
-              <i>{formatPct(b.share)}</i>
-            </span>
-          ))}
-        </div>
+        {gridLeans.length > 0 && (
+          <div className="grid-leans">
+            {gridLeans.map((b) => (
+              <span key={b.key} className={`gchip ${b.delta >= 0 ? 'up' : 'down'}`}>
+                <b>{b.label}</b>
+                <i>{formatPct(b.share)}</i>
+              </span>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="feed-sec">
