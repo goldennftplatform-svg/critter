@@ -18,6 +18,7 @@ import {
 } from './lib/format'
 import type { Analysis, CachedRound, CacheStatus } from './lib/types'
 import type { WatchPayload } from './lib/watchTypes'
+import { WalletDesk } from './WalletDesk'
 
 const WINDOWS = [
   { label: '25', value: 25 },
@@ -252,6 +253,8 @@ export default function App() {
           Live table from last {bpsQuote.sample ?? 0} rounds.
         </p>
       </section>
+
+      <WalletDesk teaser />
 
       <section className="hero-hit">
         <div className="hero-copy">
