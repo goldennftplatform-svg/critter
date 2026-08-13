@@ -3,7 +3,27 @@ import './Watch.css'
 import { BrandBar } from './Brand'
 import { fmtSolTiny } from './lib/bps'
 import { critterPng, factionHue, fmtBoard, shortMaster } from './lib/faction'
+import { connectWallet } from './lib/wallet'
 import type { WatchMaster, WatchPayload, WatchWallet } from './lib/watchTypes'
+
+const TRACK_KEY = 'critter-watch-wallets'
+
+function isSolanaAddress(value: string) {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value.trim())
+}
+
+function loadTracked(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TRACK_KEY) || '[]')
+    return Array.isArray(raw) ? raw.filter((x) => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function isCustomId(id: string) {
+  return id.startsWith('mine-') || id.startsWith('add-')
+}
 
 function isWorn(value: string | null | undefined) {
   if (!value) return false
@@ -41,7 +61,7 @@ function MasterCard({ m }: { m: WatchMaster }) {
   )
 }
 
-function WalletCard({ w }: { w: WatchWallet }) {
+function WalletCard({ w, onRemove }: { w: WatchWallet; onRemove?: (wallet: string) => void }) {
   const terronBits = Object.entries(w.terron || {})
     .sort((a, b) => Number(a[0]) - Number(b[0]))
     .map(([n, c]) => `#${n}×${c}`)
@@ -62,6 +82,11 @@ function WalletCard({ w }: { w: WatchWallet }) {
         <div>
           <h2>{w.label}</h2>
           <span className="tag">{w.masterCount} masters</span>
+          {onRemove && (
+            <button type="button" className="wdrop" onClick={() => onRemove(w.wallet)}>
+              Remove
+            </button>
+          )}
         </div>
       </div>
       <p className="wcard-tagline">{w.tagline}</p>
@@ -160,11 +185,21 @@ export default function Watch() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [tracked, setTracked] = useState<string[]>(() => loadTracked())
+  const [draft, setDraft] = useState('')
+  const [addNote, setAddNote] = useState<string | null>(null)
 
-  async function load() {
+  function persist(next: string[]) {
+    const uniq = [...new Set(next.map((w) => w.trim()).filter(isSolanaAddress))].slice(0, 4)
+    setTracked(uniq)
+    localStorage.setItem(TRACK_KEY, JSON.stringify(uniq))
+  }
+
+  async function load(list = tracked) {
     setBusy(true)
     try {
-      const res = await fetch('/api/watch', { cache: 'no-store' })
+      const q = list.length ? `?add=${encodeURIComponent(list.join(','))}` : ''
+      const res = await fetch(`/api/watch${q}`, { cache: 'no-store' })
       if (res.status === 402) return
       const json = await res.json()
       if (!res.ok || !json.success) throw new Error(json.error || `Watch ${res.status}`)
@@ -178,11 +213,52 @@ export default function Watch() {
     }
   }
 
+  function addWallet(addr: string) {
+    const wallet = addr.trim()
+    if (!isSolanaAddress(wallet)) {
+      setAddNote('That is not a Solana address.')
+      return
+    }
+    if (tracked.includes(wallet)) {
+      setAddNote('Already on the desk.')
+      return
+    }
+    if (tracked.length >= 4) {
+      setAddNote('Max 4 extra wallets on this desk.')
+      return
+    }
+    persist([wallet, ...tracked])
+    setDraft('')
+    setAddNote('Pinned. Scanning…')
+  }
+
+  async function addConnected() {
+    setAddNote(null)
+    try {
+      const wallet = await connectWallet()
+      addWallet(wallet)
+    } catch (err) {
+      setAddNote(err instanceof Error ? err.message : String(err))
+    }
+  }
+
   useEffect(() => {
-    load()
-    const t = setInterval(() => load().catch(() => {}), 60_000)
-    return () => clearInterval(t)
+    fetch('/api/gate', { credentials: 'same-origin' })
+      .then((r) => r.json())
+      .then((json) => {
+        const w = json?.data?.wallet
+        if (typeof w === 'string' && isSolanaAddress(w)) {
+          persist([w, ...loadTracked()])
+        }
+      })
+      .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    load(tracked)
+    const t = setInterval(() => load(tracked).catch(() => {}), 60_000)
+    return () => clearInterval(t)
+  }, [tracked])
 
   if (loading) {
     return (
@@ -202,7 +278,8 @@ export default function Watch() {
           <BrandBar world="valdara" />
           <h1>VALDARA HQ</h1>
           <p className="watch-sub">
-            Public roster, rares, and box strat. Live map is free spectate — no keys, no login.
+            Paste or connect a wallet to pin your own roster. MF5 / USSA stay on the desk as
+            public whales. Live map is free spectate — no keys.
           </p>
         </div>
         <div className="watch-actions">
@@ -244,9 +321,39 @@ export default function Watch() {
       {error && <p className="watch-err">{error}</p>}
       {data?.note && <p className="watch-note">{data.note}</p>}
 
+      <form
+        className="watch-add"
+        onSubmit={(e) => {
+          e.preventDefault()
+          addWallet(draft)
+        }}
+      >
+        <label>
+          Add a wallet
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Solana address or connect Phantom"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </label>
+        <button type="submit" className="btn" disabled={busy}>
+          Pin
+        </button>
+        <button type="button" className="btn ghost" onClick={() => addConnected()} disabled={busy}>
+          Connect wallet
+        </button>
+        {addNote && <p className="watch-add-note">{addNote}</p>}
+      </form>
+
       <div className="watch-stack">
         {data?.wallets.map((w) => (
-          <WalletCard key={w.id} w={w} />
+          <WalletCard
+            key={w.id}
+            w={w}
+            onRemove={isCustomId(w.id) ? (addr) => persist(tracked.filter((x) => x !== addr)) : undefined}
+          />
         ))}
       </div>
     </div>

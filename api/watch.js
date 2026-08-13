@@ -1,5 +1,14 @@
 import { protect } from '../lib/gate.js'
-import { snapshotWatchlist, WATCHLIST } from '../lib/watchSnapshot.js'
+import { mergeWatchlist, snapshotWatchlist, WATCHLIST } from '../lib/watchSnapshot.js'
+
+function extraWallets(req) {
+  const raw = req.query?.add || req.query?.wallets || ''
+  return String(raw)
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 4)
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -12,7 +21,12 @@ export default async function handler(req, res) {
 
   try {
     const id = typeof req.query?.id === 'string' ? req.query.id : null
-    const list = id ? WATCHLIST.filter((w) => w.id === id) : WATCHLIST
+    const extra = extraWallets(req)
+    const list = id
+      ? WATCHLIST.filter((w) => w.id === id)
+      : extra.length
+        ? mergeWatchlist(extra)
+        : WATCHLIST
     if (id && list.length === 0) {
       return res.status(404).json({ success: false, error: 'unknown wallet id' })
     }

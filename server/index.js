@@ -223,9 +223,18 @@ app.post('/api/sync', async (req, res) => {
 app.get('/api/watch', async (req, res) => {
   if (await protect(req, res)) return
   try {
-    const { snapshotWatchlist, WATCHLIST } = await import('../lib/watchSnapshot.js')
+    const { snapshotWatchlist, WATCHLIST, mergeWatchlist } = await import('../lib/watchSnapshot.js')
     const id = typeof req.query?.id === 'string' ? req.query.id : null
-    const list = id ? WATCHLIST.filter((w) => w.id === id) : WATCHLIST
+    const extra = String(req.query?.add || req.query?.wallets || '')
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 4)
+    const list = id
+      ? WATCHLIST.filter((w) => w.id === id)
+      : extra.length
+        ? mergeWatchlist(extra)
+        : WATCHLIST
     if (id && list.length === 0) {
       return res.status(404).json({ success: false, error: 'unknown wallet id' })
     }
