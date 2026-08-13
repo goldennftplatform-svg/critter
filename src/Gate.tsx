@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import './Gate.css'
-import { connectWallet, hasWallet, sendPayTx, signDeskLogin } from './lib/wallet'
+import { connectWallet, hasWallet, sendPayTx } from './lib/wallet'
 
 type PayItem = {
   id: string
@@ -95,14 +95,7 @@ export function Gate({ children }: { children: ReactNode }) {
     setNote(null)
     try {
       const wallet = await connectWallet()
-      const memo = data?.checkout?.memo || data?.memo || 'C3'
-      const signed = await signDeskLogin(wallet, memo)
-      const next = await load({
-        action: 'login',
-        wallet: signed.wallet,
-        message: signed.message,
-        signature: signed.signature,
-      })
+      const next = await load({ action: 'login', wallet })
       if (next.credited) setNote('Pass found on this wallet. Desk unlocked.')
       else setNote(`Connected ${shortAddr(wallet)}. Pay $5 from this wallet.`)
     } catch (err) {
@@ -116,17 +109,9 @@ export function Gate({ children }: { children: ReactNode }) {
     setBusy(true)
     setNote(null)
     try {
-      let wallet = data?.wallet || ''
-      if (!wallet) {
-        wallet = await connectWallet()
-        const memo = data?.checkout?.memo || data?.memo || 'C3'
-        const signed = await signDeskLogin(wallet, memo)
-        await load({
-          action: 'login',
-          wallet: signed.wallet,
-          message: signed.message,
-          signature: signed.signature,
-        })
+      const wallet = data?.wallet || (await connectWallet())
+      if (!data?.wallet) {
+        await load({ action: 'login', wallet })
       }
       const built = await load({ action: 'paytx', asset, wallet })
       if (!built.tx) throw new Error('Could not build pay tx')
