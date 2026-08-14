@@ -1,51 +1,20 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import './Gate.css'
-import {
-  WALLET_EVENT,
-  connectWallet,
-  disconnectWallet,
-  getConnectedWallet,
-  hasWallet,
-} from './lib/wallet'
-
-const IN_KEY = 'critter-in'
+import { WALLET_EVENT, disconnectWallet, getConnectedWallet } from './lib/wallet'
 
 type GateData = {
   gated: boolean
   paid: boolean
-  prompt?: boolean
-  remainingMs: number
   wallet?: string | null
-  ip?: string
-  entered?: boolean
-  connected?: boolean
 }
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 4)}…${addr.slice(-4)}`
 }
 
-function alreadyIn() {
-  try {
-    return sessionStorage.getItem(IN_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function markIn() {
-  try {
-    sessionStorage.setItem(IN_KEY, '1')
-  } catch {
-    /* private mode */
-  }
-}
-
 export function Gate({ children }: { children: ReactNode }) {
   const [data, setData] = useState<GateData | null>(null)
-  const [hello, setHello] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [note, setNote] = useState<string | null>(null)
   const [connected, setConnected] = useState(() => getConnectedWallet())
 
   async function load(extra?: Record<string, string>) {
@@ -64,10 +33,9 @@ export function Gate({ children }: { children: ReactNode }) {
   useEffect(() => {
     load()
       .then((next) => {
-        if (next.gated && !alreadyIn()) setHello(true)
         if (next.wallet) setConnected(next.wallet)
       })
-      .catch((err) => setNote(err instanceof Error ? err.message : String(err)))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -80,47 +48,13 @@ export function Gate({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(WALLET_EVENT, onWallet)
   }, [])
 
-  function dismiss() {
-    markIn()
-    setHello(false)
-  }
-
-  async function onEnter() {
-    setBusy(true)
-    setNote(null)
-    try {
-      await load({ action: 'enter' })
-      dismiss()
-    } catch (err) {
-      setNote(err instanceof Error ? err.message : String(err))
-      dismiss()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function onConnect() {
-    setBusy(true)
-    setNote(null)
-    try {
-      const wallet = await connectWallet()
-      await load({ action: 'login', wallet })
-      dismiss()
-    } catch (err) {
-      setNote(err instanceof Error ? err.message : String(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
   async function onDisconnect() {
     setBusy(true)
-    setNote(null)
     try {
       await disconnectWallet()
       await load({ action: 'logout' })
-    } catch (err) {
-      setNote(err instanceof Error ? err.message : String(err))
+    } catch {
+      /* already dropped */
     } finally {
       setBusy(false)
     }
@@ -132,49 +66,12 @@ export function Gate({ children }: { children: ReactNode }) {
     <>
       {children}
 
-      {wallet && !hello && (
+      {wallet && (
         <div className="gate-chip paid">
           <span>{shortAddr(wallet)}</span>
           <button type="button" onClick={() => onDisconnect()} disabled={busy}>
             {busy ? '…' : 'Disconnect'}
           </button>
-        </div>
-      )}
-
-      {hello && (
-        <div
-          className="gate-veil"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Enter"
-          onClick={() => dismiss()}
-        >
-          <div className="gate-card" onClick={(e) => e.stopPropagation()}>
-            <p className="gate-kicker">Critter Three · HQ</p>
-            <h2>Come in. The desk is free.</h2>
-            <p className="gate-lead">
-              Connect a wallet if you have one, or just enter. Lucky Pick and Valdara stay open.
-            </p>
-
-            {hasWallet() && (
-              <button type="button" className="btn gate-go" onClick={() => onConnect()} disabled={busy}>
-                {busy ? 'Wallet…' : 'Connect Phantom / Solflare'}
-              </button>
-            )}
-            <button
-              type="button"
-              className={hasWallet() ? 'gate-alt' : 'btn gate-go'}
-              onClick={() => onEnter()}
-              disabled={busy}
-            >
-              {busy ? 'Opening…' : 'Enter free'}
-            </button>
-            {!hasWallet() && (
-              <p className="gate-note">No wallet in this browser — you can still enter free.</p>
-            )}
-            {note && <p className="gate-note">{note}</p>}
-            {data?.ip && <p className="gate-ip">session {data.ip}</p>}
-          </div>
         </div>
       )}
     </>
