@@ -9,6 +9,7 @@ import {
   getConnectedWallet,
 } from './lib/wallet'
 import { MineDesk } from './MineDesk'
+import type { WatchMaster, WatchPayload, WatchWallet } from './lib/watchTypes'
 
 export const TRACK_KEY = 'critter-watch-wallets'
 const MINE_TRACK_KEY = 'critter-mine-track'
