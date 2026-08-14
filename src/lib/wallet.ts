@@ -50,26 +50,28 @@ export function setConnectedWallet(addr: string | null) {
   window.dispatchEvent(new CustomEvent(WALLET_EVENT, { detail: addr }))
 }
 
-export async function connectWallet() {
+export async function connectWallet(opts?: { force?: boolean }) {
   const p = provider()
   if (!p) {
     window.open('https://phantom.app/', '_blank', 'noreferrer')
     throw new Error('Install Phantom or Solflare, then come back')
   }
-  const already = addrOf(p)
-  if (already) {
-    setConnectedWallet(already)
-    return already
-  }
-  try {
-    const silent = await p.connect({ onlyIfTrusted: true })
-    const trusted = addrOf(p, silent)
-    if (trusted) {
-      setConnectedWallet(trusted)
-      return trusted
+  if (!opts?.force) {
+    const already = addrOf(p)
+    if (already) {
+      setConnectedWallet(already)
+      return already
     }
-  } catch {
-    /* first visit — fall through to a real prompt */
+    try {
+      const silent = await p.connect({ onlyIfTrusted: true })
+      const trusted = addrOf(p, silent)
+      if (trusted) {
+        setConnectedWallet(trusted)
+        return trusted
+      }
+    } catch {
+      /* first visit — fall through to a real prompt */
+    }
   }
   try {
     const res = await p.connect()

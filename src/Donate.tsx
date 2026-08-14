@@ -1,12 +1,9 @@
+import { useEffect, useRef, useState } from 'react'
+import { connectWallet, sendPayTx } from './lib/wallet'
+
 export const TREASURY = '5S9tyrZwcgV127fEQMzCaBNWmEKz3iUBdASKaurBSGHU'
 
-export function donateUrl(treasury = TREASURY) {
-  const q = new URLSearchParams({
-    label: 'Critter Three',
-    message: 'Donation',
-  })
-  return `solana:${treasury}?${q.toString()}`
-}
+const AMOUNTS = [0.02, 0.05, 0.1]
 
 export function DonateButton({
   className,
@@ -15,9 +12,66 @@ export function DonateButton({
   className?: string
   treasury?: string
 }) {
+  const wrap = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDoc(e: MouseEvent) {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  async function send(sol: number) {
+    setBusy(true)
+    setNote(null)
+    try {
+      const wallet = await connectWallet({ force: true })
+      const res = await fetch('/api/gate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'donate', wallet, sol, treasury }),
+      })
+      const json = await res.json()
+      if (!json.success || !json.data?.tx) throw new Error(json.error || 'Could not build donate tx')
+      await sendPayTx(json.data.tx)
+      setNote(`Sent ${sol} SOL. Thank you.`)
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <a className={className} href={donateUrl(treasury)} title={`Send to ${treasury}`}>
-      Donate
-    </a>
+    <div className="donate-wrap" ref={wrap}>
+      <button
+        type="button"
+        className={className}
+        onClick={() => {
+          setNote(null)
+          setOpen((v) => !v)
+        }}
+        disabled={busy}
+      >
+        {busy ? 'Wallet…' : 'Donate'}
+      </button>
+      {open && (
+        <div className="donate-menu" role="dialog" aria-label="Donate SOL">
+          <p>Send SOL to the desk</p>
+          {AMOUNTS.map((sol) => (
+            <button key={sol} type="button" disabled={busy} onClick={() => send(sol)}>
+              {sol} SOL
+            </button>
+          ))}
+          {note && <p className="donate-note">{note}</p>}
+        </div>
+      )}
+    </div>
   )
 }

@@ -166,7 +166,8 @@ h2,
   gap: 0.35rem;
 }
 
-.world-nav a {
+.world-nav a,
+.world-nav .donate {
   min-height: 2.15rem;
   padding: 0.35rem 0.75rem;
   border: 2px solid rgba(255, 255, 255, 0.18);
@@ -189,12 +190,66 @@ h2,
   box-shadow: 0 0 0 1px var(--gold), 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
-.world-nav a.donate {
+.donate-wrap {
+  position: relative;
+}
+
+.world-nav .donate {
   border-color: var(--gold);
   color: var(--void);
+  cursor: pointer;
   background:
     linear-gradient(180deg, rgba(255, 184, 74, 0.95), rgba(232, 148, 26, 0.92)),
     url('/brand/button-texture.png') center / cover;
+}
+
+.world-nav .donate:disabled {
+  opacity: 0.7;
+}
+
+.donate-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 60;
+  min-width: 11.5rem;
+  padding: 0.6rem;
+  border: 1px solid rgba(255, 184, 74, 0.4);
+  border-radius: 0.85rem;
+  background: rgba(21, 20, 20, 0.96);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+.donate-menu p {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.donate-menu button {
+  display: block;
+  width: 100%;
+  margin: 0.28rem 0 0;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(255, 184, 74, 0.35);
+  border-radius: 0.55rem;
+  background: rgba(255, 184, 74, 0.12);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.donate-menu .donate-note {
+  margin: 0.45rem 0 0;
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.35;
 }
 
 .btn {
