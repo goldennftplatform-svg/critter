@@ -312,18 +312,6 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
   }, [])
 
   useEffect(() => {
-    fetch('/api/gate', { credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then((json) => {
-        const w = json?.data?.wallet
-        if (typeof w === 'string' && isSolanaAddress(w)) {
-          persist([w, ...loadTracked()])
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
     load(tracked)
     const t = setInterval(() => load(tracked).catch(() => {}), 60_000)
     return () => clearInterval(t)

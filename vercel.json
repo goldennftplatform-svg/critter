@@ -5,6 +5,16 @@
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/index.html",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ],
   "functions": {
     "api/cache.js": { "maxDuration": 60 },
     "api/sync.js": { "maxDuration": 60 },

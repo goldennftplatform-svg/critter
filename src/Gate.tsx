@@ -15,7 +15,7 @@ function shortAddr(addr: string) {
 export function Gate({ children }: { children: ReactNode }) {
   const [data, setData] = useState<GateData | null>(null)
   const [busy, setBusy] = useState(false)
-  const [connected, setConnected] = useState(() => getConnectedWallet())
+  const [connected, setConnected] = useState<string | null>(null)
 
   async function load(extra?: Record<string, string>) {
     const res = await fetch('/api/gate', {
@@ -31,11 +31,7 @@ export function Gate({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    load()
-      .then((next) => {
-        if (next.wallet) setConnected(next.wallet)
-      })
-      .catch(() => {})
+    load().catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -60,7 +56,7 @@ export function Gate({ children }: { children: ReactNode }) {
     }
   }
 
-  const wallet = connected || data?.wallet || null
+  const wallet = connected
 
   return (
     <>
