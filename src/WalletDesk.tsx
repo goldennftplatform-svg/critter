@@ -8,9 +8,18 @@ import {
   disconnectWallet,
   getConnectedWallet,
 } from './lib/wallet'
-import type { WatchMaster, WatchPayload, WatchWallet } from './lib/watchTypes'
+import { MineDesk } from './MineDesk'
 
 export const TRACK_KEY = 'critter-watch-wallets'
+const MINE_TRACK_KEY = 'critter-mine-track'
+
+function loadMineTrack() {
+  try {
+    return localStorage.getItem(MINE_TRACK_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 function isSolanaAddress(value: string) {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value.trim())
@@ -195,8 +204,18 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
   const [busy, setBusy] = useState(false)
   const [tracked, setTracked] = useState<string[]>(() => loadTracked())
   const [connected, setConnected] = useState(() => getConnectedWallet())
+  const [trackMine, setTrackMine] = useState(() => loadMineTrack())
   const [draft, setDraft] = useState('')
   const [addNote, setAddNote] = useState<string | null>(null)
+
+  function persistMineTrack(on: boolean) {
+    setTrackMine(on)
+    try {
+      localStorage.setItem(MINE_TRACK_KEY, on ? '1' : '0')
+    } catch {
+      /* private mode */
+    }
+  }
 
   function persist(next: string[]) {
     const uniq = [...new Set(next.map((w) => w.trim()).filter(isSolanaAddress))].slice(0, 4)
@@ -238,6 +257,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
     persist([wallet, ...tracked])
     setDraft('')
     setAddNote('Pinned.')
+    if (teaser) persistMineTrack(true)
   }
 
   async function addConnected() {
@@ -245,6 +265,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
     try {
       const wallet = await connectWallet()
       if (!tracked.includes(wallet)) addWallet(wallet)
+      if (teaser) persistMineTrack(true)
       await fetch('/api/gate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -315,7 +336,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
     <section className={`wallet-desk ${teaser ? 'teaser' : ''}`}>
       <div className="sec-head">
         <h2>Your desk</h2>
-        <span>Paste an address or connect Phantom</span>
+        <span>{teaser ? 'Opt in to track QUEST in/out' : 'Paste an address or connect Phantom'}</span>
       </div>
       <form
         className="watch-add"
@@ -347,7 +368,21 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
           </button>
         )}
         {addNote && <p className="watch-add-note">{addNote}</p>}
+        {teaser && (
+          <label className="mine-opt">
+            <input
+              type="checkbox"
+              checked={trackMine}
+              onChange={(e) => persistMineTrack(e.target.checked)}
+            />
+            Track QUEST in/out
+          </label>
+        )}
       </form>
+
+      {teaser && trackMine && (connected || tracked[0]) && (
+        <MineDesk wallets={connected ? [connected, ...tracked.filter((w) => w !== connected)].slice(0, 2) : tracked.slice(0, 2)} />
+      )}
 
       {mine.length > 0 && (
         <div className="watch-stack">
@@ -371,7 +406,7 @@ export function WalletDesk({ teaser = false }: { teaser?: boolean }) {
 
       {teaser && mine.length === 0 && (
         <p className="watch-add-note">
-          Pin your wallet to see SOL, board QUEST, BPS, rares, town, and every critter.
+          Pin your wallet and opt in to track QUEST in/out on Lucky Pick.
         </p>
       )}
     </section>

@@ -189,6 +189,103 @@
   color: var(--gold);
 }
 
+.mine-opt {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.2rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.mine-opt input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--gold);
+}
+
+.mine-desk {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 0.85rem;
+}
+
+.mine-card {
+  padding: 0.85rem 0.9rem 0.9rem;
+  border: 1px solid rgba(255, 184, 74, 0.32);
+  border-radius: 1.4rem;
+  background: rgba(21, 20, 20, 0.78);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+}
+
+.mine-grid b.up {
+  color: var(--ok, #8fbc6b);
+}
+
+.mine-grid b.down {
+  color: var(--danger, #e35d5d);
+}
+
+.mine-plays {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.mine-play {
+  display: grid;
+  grid-template-columns: auto auto 1fr 1fr 1fr auto;
+  gap: 0.35rem 0.55rem;
+  align-items: baseline;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(255, 184, 74, 0.18);
+  border-radius: 0.65rem;
+  background: rgba(0, 0, 0, 0.28);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--ink-dim);
+}
+
+.mine-play.mined {
+  border-color: rgba(255, 184, 74, 0.4);
+}
+
+.mine-play strong {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  color: var(--gold);
+}
+
+.mine-play i {
+  font-style: normal;
+  color: var(--ink-faint);
+}
+
+.mine-play .q {
+  color: var(--gold);
+}
+
+.mine-play em {
+  font-style: normal;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .mine-play {
+    grid-template-columns: auto 1fr 1fr;
+  }
+
+  .mine-play i,
+  .mine-play em {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .watch-add {
     grid-template-columns: 1fr 1fr;

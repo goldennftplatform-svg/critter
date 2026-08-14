@@ -248,6 +248,29 @@ app.get('/api/watch', async (req, res) => {
   }
 })
 
+app.get('/api/mine', async (req, res) => {
+  if (await protect(req, res)) return
+  try {
+    const { isSolanaAddress } = await import('../lib/watchSnapshot.js')
+    const { trackMineWallets } = await import('../lib/mineTrack.js')
+    const addrs = String(req.query?.wallet || req.query?.add || req.query?.wallets || '')
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(isSolanaAddress)
+      .slice(0, 4)
+    if (!addrs.length) {
+      return res.status(400).json({ success: false, error: 'wallet required' })
+    }
+    const tracks = await trackMineWallets(addrs)
+    res.json({ success: true, data: { tracks } })
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
 // Production: serve built SPA
 const dist = path.join(ROOT, 'dist')
 app.use(express.static(dist))
