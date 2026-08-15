@@ -16,9 +16,19 @@ export type TroveSquare = {
   n: number
 }
 
+export type TroveComing = {
+  square: number
+  n: number
+  since: number
+  lastSol: number
+  lastOre: number
+  lastTier: string
+}
+
 export type TroveDesk = {
   hits: TroveHit[]
   last: TroveHit | null
+  biggest: TroveHit | null
   since: number
   avgGap: number
   medianGap: number
@@ -31,7 +41,13 @@ export type TroveDesk = {
   major: number
   sample: number
   pool: number
+  paidSol: number
+  paidOre: number
+  avgPay: number
+  avgMinor: number
+  avgMajor: number
   bySquare: TroveSquare[]
+  coming: TroveComing[]
 }
 
 const MS_PER_ROUND = (24 * 60 * 60 * 1000) / ROUNDS_PER_DAY
@@ -55,6 +71,17 @@ export function fmtRoundsClock(rounds: number) {
   const hrs = mins / 60
   if (hrs < 24) return `${hrs.toFixed(hrs >= 10 ? 0 : 1)}h`
   return `${(hrs / 24).toFixed(1)}d`
+}
+
+export function fmtEta(rounds: number) {
+  if (rounds <= 0) return 'NOW'
+  const t = new Date(Date.now() + rounds * MS_PER_ROUND)
+  return t.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
+function avgLamports(hits: TroveHit[]) {
+  if (!hits.length) return 0
+  return hits.reduce((s, h) => s + h.sol, 0) / hits.length
 }
 
 function median(xs: number[]) {
@@ -88,14 +115,37 @@ export function analyzeTrove(roundsNewestFirst: CachedRound[]): TroveDesk {
   const dueMult = avgGap > 0 ? since / avgGap : 0
 
   const counts = new Map<number, number>()
-  for (const h of hits) counts.set(h.square, (counts.get(h.square) || 0) + 1)
+  const firstBySq = new Map<number, { since: number; hit: TroveHit }>()
+  hits.forEach((h, i) => {
+    counts.set(h.square, (counts.get(h.square) || 0) + 1)
+    if (!firstBySq.has(h.square)) firstBySq.set(h.square, { since: idxs[i], hit: h })
+  })
   const bySquare = [...counts.entries()]
     .map(([square, n]) => ({ square, n }))
     .sort((a, b) => b.n - a.n || a.square - b.square)
+  const coming = [...firstBySq.entries()]
+    .map(([square, row]) => ({
+      square,
+      n: counts.get(square) || 0,
+      since: row.since,
+      lastSol: row.hit.sol,
+      lastOre: row.hit.ore,
+      lastTier: row.hit.tier,
+    }))
+    .sort((a, b) => b.since - a.since || b.n - a.n)
+    .slice(0, 6)
+
+  const minors = hits.filter((h) => /minor/i.test(h.tier))
+  const majors = hits.filter((h) => /major/i.test(h.tier))
+  const biggest = hits.reduce<TroveHit | null>((best, h) => {
+    if (!best || h.sol > best.sol) return h
+    return best
+  }, null)
 
   return {
     hits,
     last: hits[0] ?? null,
+    biggest,
     since,
     avgGap,
     medianGap: median(gaps),
@@ -104,10 +154,16 @@ export function analyzeTrove(roundsNewestFirst: CachedRound[]): TroveDesk {
     dueMult,
     estRounds: avgGap > 0 ? Math.max(0, Math.round(avgGap - since)) : 0,
     rate: roundsNewestFirst.length ? hits.length / roundsNewestFirst.length : 0,
-    minor: hits.filter((h) => /minor/i.test(h.tier)).length,
-    major: hits.filter((h) => /major/i.test(h.tier)).length,
+    minor: minors.length,
+    major: majors.length,
     sample: roundsNewestFirst.length,
     pool: roundsNewestFirst[0]?.motherlodePool || 0,
+    paidSol: hits.reduce((s, h) => s + h.sol, 0),
+    paidOre: hits.reduce((s, h) => s + h.ore, 0),
+    avgPay: avgLamports(hits),
+    avgMinor: avgLamports(minors),
+    avgMajor: avgLamports(majors),
     bySquare,
+    coming,
   }
 }
