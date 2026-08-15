@@ -18,6 +18,8 @@ import {
 } from './lib/format'
 import type { Analysis, CachedRound, CacheStatus } from './lib/types'
 import type { WatchPayload } from './lib/watchTypes'
+import { analyzeTrove } from './lib/trove'
+import { TroveJackpot } from './TroveJackpot'
 import { WalletDesk } from './WalletDesk'
 
 const WINDOWS = [
@@ -128,6 +130,7 @@ export default function App() {
     return quoteFromDeployed(sample.map((r) => r.deployed))
   }, [rounds, windowSize])
   const mf5 = watch?.wallets.find((w) => w.id === 'mf5')
+  const trove = useMemo(() => analyzeTrove(rounds), [rounds])
 
   if (loading) {
     return (
@@ -287,6 +290,8 @@ export default function App() {
           })}
         </div>
       </section>
+
+      <TroveJackpot desk={trove} />
 
       <section className="board-sec">
         <div className="sec-head">

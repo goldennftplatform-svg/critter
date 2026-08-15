@@ -11,6 +11,7 @@ export type CachedRound = {
   motherlodeTier: string
   motherlodeSol: number
   motherlodeOre: number
+  motherlodePool?: number
   winners: number
   miners: number
   topMiner: string | null

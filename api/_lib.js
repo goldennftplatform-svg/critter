@@ -22,6 +22,7 @@ export function slimRound(r) {
     motherlodeTier: r.motherlode_tier ?? 'None',
     motherlodeSol: r.sol_motherlode_payout ?? 0,
     motherlodeOre: r.ore_motherlode_payout ?? 0,
+    motherlodePool: r.sol_motherlode_amount ?? 0,
     winners: r.num_winners ?? 0,
     miners: r.num_miners ?? 0,
     topMiner: r.top_miner ?? null,

@@ -353,6 +353,241 @@
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
 }
 
+.jackpot {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  overflow: hidden;
+  border: 2px solid rgba(255, 184, 74, 0.55);
+  border-radius: 1.45rem;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 184, 74, 0.22), transparent 55%),
+    linear-gradient(180deg, #2a1a08 0%, #151414 55%, #0c0b0b 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 122, 0.2),
+    0 18px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 210, 122, 0.25);
+  animation: rise 0.55s ease both;
+}
+
+.jackpot.hot {
+  border-color: #ffd27a;
+  box-shadow:
+    0 0 0 1px #ffd27a,
+    0 0 28px rgba(255, 184, 74, 0.35),
+    0 18px 36px rgba(0, 0, 0, 0.45);
+}
+
+.jp-marquee {
+  overflow: hidden;
+  margin: -0.15rem 0 0.65rem;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.jp-track {
+  display: flex;
+  gap: 1.4rem;
+  width: max-content;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  animation: jp-scroll 28s linear infinite;
+}
+
+@keyframes jp-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.jp-hero {
+  text-align: center;
+}
+
+.jp-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.jackpot.hot .jp-kicker {
+  color: #ffd27a;
+  animation: jp-blink 1s steps(2) infinite;
+}
+
+@keyframes jp-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.jp-amt {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.jp-amt b {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 16vw, 4.6rem);
+  font-weight: 700;
+  line-height: 0.9;
+  color: #ffe08a;
+  text-shadow: 0 0 18px rgba(255, 184, 74, 0.55);
+}
+
+.jp-amt i {
+  font-style: normal;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+
+.jp-last {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.jp-last strong {
+  color: var(--gold-hot);
+  font-size: 0.95rem;
+}
+
+.jp-tier {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--void);
+  background: var(--gold);
+}
+
+.jp-tier.major {
+  background: #ffd27a;
+}
+
+.jp-meter {
+  height: 0.55rem;
+  margin: 0.75rem 0 0.7rem;
+  border: 1px solid rgba(255, 184, 74, 0.4);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.jp-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #c47a18, #ffb84a, #ffe08a);
+  box-shadow: 0 0 12px rgba(255, 184, 74, 0.55);
+}
+
+.jp-meter.over i {
+  background: linear-gradient(90deg, #ffb84a, #fff1b0);
+}
+
+.jp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.jp-stats div {
+  display: grid;
+  gap: 0.05rem;
+  padding: 0.45rem 0.25rem 0.4rem;
+  border: 1px solid rgba(255, 184, 74, 0.22);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.jp-stats b {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #ffe08a;
+}
+
+.jp-stats span {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.jp-stats em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--ink-faint);
+}
+
+.jp-stats .due b {
+  color: #9dff7a;
+}
+
+.jp-nums {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.jp-nums span {
+  display: grid;
+  min-width: 3.1rem;
+  padding: 0.35rem 0.4rem 0.3rem;
+  border: 1px solid rgba(255, 184, 74, 0.35);
+  border-radius: 0.7rem;
+  background: rgba(255, 184, 74, 0.08);
+  text-align: center;
+}
+
+.jp-nums span.on {
+  border-color: #ffd27a;
+  background: rgba(255, 184, 74, 0.22);
+}
+
+.jp-nums b {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--gold-hot);
+}
+
+.jp-nums i {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 520px) {
+  .jp-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .play-rank {
   font-family: var(--font-mono);
   font-size: 0.62rem;
