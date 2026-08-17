@@ -5,6 +5,7 @@ export {}
 type SolanaProvider = {
   isPhantom?: boolean
   isSolflare?: boolean
+  isRobinhood?: boolean
   publicKey?: { toString(): string }
   connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString(): string } }>
   signMessage: (msg: Uint8Array, enc?: string) => Promise<{ signature: Uint8Array } | Uint8Array>
@@ -17,5 +18,6 @@ declare global {
     solana?: SolanaProvider
     solflare?: SolanaProvider
     phantom?: { solana?: SolanaProvider }
+    robinhood?: { solana?: SolanaProvider }
   }
 }

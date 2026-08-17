@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import './Watch.css'
 import { BrandBar } from './Brand'
 import { fmtSolTiny } from './lib/bps'
+import { RhDesk } from './RhDesk'
 import { WalletDesk } from './WalletDesk'
 import type { WatchPayload } from './lib/watchTypes'
 
 export default function Watch() {
   const [quote, setQuote] = useState<WatchPayload['bpsQuote'] | null>(null)
+  const [watch, setWatch] = useState<WatchPayload | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [spectate, setSpectate] = useState('https://game.critters.quest/?spectate=1')
 
@@ -15,6 +17,7 @@ export default function Watch() {
       .then((r) => r.json())
       .then((json) => {
         if (!json.success) return
+        setWatch(json.data)
         setQuote(json.data.bpsQuote ?? null)
         setNote(json.data.note ?? null)
         if (json.data.spectateUrl) setSpectate(json.data.spectateUrl)
@@ -59,6 +62,8 @@ export default function Watch() {
           </div>
         </section>
       )}
+
+      {watch && <RhDesk wallets={watch.wallets} />}
 
       {note && <p className="watch-note">{note}</p>}
 

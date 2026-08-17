@@ -19,6 +19,7 @@ import {
 import type { Analysis, CachedRound, CacheStatus } from './lib/types'
 import type { WatchPayload } from './lib/watchTypes'
 import { analyzeTrove } from './lib/trove'
+import { RhDesk } from './RhDesk'
 import { TroveJackpot } from './TroveJackpot'
 import { WalletDesk } from './WalletDesk'
 
@@ -437,6 +438,8 @@ export default function App() {
           </div>
         )}
       </section>
+
+      {watch && <RhDesk wallets={watch.wallets} />}
 
       <section className="bps-desk">
         <div className="sec-head">

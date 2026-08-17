@@ -15,6 +15,7 @@ export type WatchMaster = {
   faction: string | null
   species?: string | null
   bps: number
+  bpsKnown?: boolean
   spinsUnlocked?: number
   weapon: string | null
   shield: string | null

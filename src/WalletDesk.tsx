@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './Watch.css'
 import { fmtSolTiny } from './lib/bps'
+import { RH_EST_PCT, rhCommit, rhPhase } from './lib/rh'
 import { critterPng, factionHue, fmtBoard, shortMaster } from './lib/faction'
 import {
   WALLET_EVENT,
@@ -66,7 +67,8 @@ function MasterCard({ m }: { m: WatchMaster }) {
           <span>HP {m.hp}</span>
         </div>
         <span className="rsub">
-          {m.bps ? `${m.bps.toFixed(3)} BPS` : 'no BPS'} · {fmtBoard(m.tokens)} board
+          {m.bpsKnown === false ? 'BPS —' : m.bps ? `${m.bps.toFixed(3)} BPS` : 'no BPS'} ·{' '}
+          {fmtBoard(m.tokens)} board
           {m.editions ? ` · ${m.editions} ed` : ''}
         </span>
         {gear.length > 0 && <span className="rgear">{gear.join(' · ')}</span>}
@@ -127,6 +129,12 @@ export function WalletCard({
           <b>{w.bpsYield ? fmtSolTiny(w.bpsYield.perDay) : '—'}</b>
           <span>SOL/day est</span>
         </div>
+        {w.boardQuest > 0 && rhPhase() !== 'done' && (
+          <div className="rh-stat">
+            <b>{fmtBoard(rhCommit(w.boardQuest, RH_EST_PCT))}</b>
+            <span>RH est 25%</span>
+          </div>
+        )}
       </div>
 
       {w.boxes && (

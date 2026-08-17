@@ -7,6 +7,7 @@ export const WALLET_EVENT = 'critter-wallet'
 type Provider = {
   isPhantom?: boolean
   isSolflare?: boolean
+  isRobinhood?: boolean
   publicKey?: { toString(): string }
   connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString(): string } } | undefined>
   disconnect?: () => Promise<void>
@@ -16,6 +17,8 @@ type Provider = {
 function provider(): Provider | null {
   const w = window
   if (w.phantom?.solana?.isPhantom) return w.phantom.solana
+  if (w.robinhood?.solana) return w.robinhood.solana
+  if (w.solana?.isRobinhood) return w.solana
   if (w.solflare?.isSolflare) return w.solflare
   if (w.solana?.isPhantom) return w.solana
   if (w.solflare) return w.solflare
@@ -54,7 +57,7 @@ export async function connectWallet(opts?: { force?: boolean }) {
   const p = provider()
   if (!p) {
     window.open('https://phantom.app/', '_blank', 'noreferrer')
-    throw new Error('Install Phantom or Solflare, then come back')
+    throw new Error('Install Phantom, Robinhood, or Solflare, then come back')
   }
   if (!opts?.force) {
     const already = addrOf(p)
