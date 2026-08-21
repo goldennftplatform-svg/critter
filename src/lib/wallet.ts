@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer'
-import { Transaction } from '@solana/web3.js'
+import { Connection, Transaction } from '@solana/web3.js'
 
 const CONNECTED_KEY = 'critter-connected-wallet'
 export const WALLET_EVENT = 'critter-wallet'
@@ -105,4 +105,29 @@ export async function sendPayTx(b64: string) {
   const tx = Transaction.from(Buffer.from(b64, 'base64'))
   const sent = await p.signAndSendTransaction(tx)
   return typeof sent === 'string' ? sent : sent.signature
+}
+
+const RPC = 'https://api.mainnet-beta.solana.com'
+
+/** Poll the RPC until the signature confirms. Returns false if the budget runs out. */
+export async function confirmTx(signature: string, timeoutMs = 45_000): Promise<boolean> {
+  const conn = new Connection(RPC, 'confirmed')
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    try {
+      const res = await conn.getSignatureStatuses([signature])
+      const st = res.value[0]
+      if (st) {
+        if (st.err) throw new Error('Transaction failed on-chain')
+        if (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized') {
+          return true
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Transaction failed on-chain') throw err
+      /* transient RPC hiccup — keep polling */
+    }
+    await new Promise((r) => setTimeout(r, 2_000))
+  }
+  return false
 }

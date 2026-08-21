@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './Watch.css'
 import { fmtBoard, shortMaster } from './lib/faction'
-import { fmtRhClock, RH_EST_PCT, RH_PCTS, rhCommit, rhPhase, rhRemain } from './lib/rh'
+import { fmtRhClock, RH_EST_PCT, RH_PCTS, rhCommit, rhDateLabel, rhPhase, rhRemain } from './lib/rh'
 import type { WatchWallet } from './lib/watchTypes'
 
 export function RhDesk({ wallets }: { wallets: WatchWallet[] }) {
@@ -29,7 +29,7 @@ export function RhDesk({ wallets }: { wallets: WatchWallet[] }) {
         <p className="rh-kicker">{phase === 'open' ? 'OPT IN' : 'RH'}</p>
         <div className="rh-clock">
           <b>{phase === 'open' ? 'NOW' : fmtRhClock(rhRemain(now))}</b>
-          <i>AUG 20</i>
+          <i>{rhDateLabel()}</i>
         </div>
       </div>
       <div className="rh-stats">

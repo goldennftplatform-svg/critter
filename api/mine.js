@@ -1,4 +1,3 @@
-import { protect } from '../lib/gate.js'
 import { isSolanaAddress } from '../lib/watchSnapshot.js'
 import { trackMineWallets } from '../lib/mineTrack.js'
 
@@ -15,7 +14,6 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'OPTIONS') return res.status(204).end()
-  if (await protect(req, res)) return
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'GET only' })
   }

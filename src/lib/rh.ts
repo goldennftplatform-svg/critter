@@ -1,5 +1,7 @@
-/** Official pre-announce: Aug 20, short opt-in. Noon ET until they post a clock. */
-export const RH_OPENS = Date.parse('2026-08-20T16:00:00.000Z')
+/** Opt-in window start. Set VITE_RH_OPENS (ISO) for the next event; falls back to the Aug 20 announce. */
+const DEFAULT_OPENS = '2026-08-20T16:00:00.000Z'
+const parsedOpens = Date.parse(import.meta.env.VITE_RH_OPENS ?? '')
+export const RH_OPENS = Number.isFinite(parsedOpens) ? parsedOpens : Date.parse(DEFAULT_OPENS)
 export const RH_HOLD = RH_OPENS + 48 * 60 * 60 * 1000
 /** Published example only — live % lands with the window. */
 export const RH_EST_PCT = 0.25
@@ -13,6 +15,12 @@ export function rhPhase(now = Date.now()) {
 
 export function rhRemain(now = Date.now()) {
   return Math.max(0, RH_OPENS - now)
+}
+
+export function rhDateLabel() {
+  return new Date(RH_OPENS)
+    .toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+    .toUpperCase()
 }
 
 export function fmtRhClock(ms: number) {

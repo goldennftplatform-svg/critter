@@ -1,4 +1,4 @@
-import { handleGate, protect } from '../lib/gate.js'
+import { handleGate } from '../lib/gate.js'
 import express from 'express'
 import cors from 'cors'
 import fs from 'fs/promises'
@@ -200,8 +200,7 @@ app.get('/api/status', (_req, res) => {
   res.json({ success: true, data: publicStatus() })
 })
 
-app.get('/api/cache', async (req, res) => {
-  if (await protect(req, res)) return
+app.get('/api/cache', async (_req, res) => {
   res.json({
     success: true,
     data: {
@@ -212,7 +211,6 @@ app.get('/api/cache', async (req, res) => {
 })
 
 app.post('/api/sync', async (req, res) => {
-  if (await protect(req, res)) return
   const forceFull = Boolean(req.body?.full)
   const result = await syncRounds({ forceFull })
   res.json({
@@ -222,7 +220,6 @@ app.post('/api/sync', async (req, res) => {
 })
 
 app.get('/api/watch', async (req, res) => {
-  if (await protect(req, res)) return
   try {
     const { snapshotWatchlist, WATCHLIST, mergeWatchlist } = await import('../lib/watchSnapshot.js')
     const id = typeof req.query?.id === 'string' ? req.query.id : null
@@ -250,7 +247,6 @@ app.get('/api/watch', async (req, res) => {
 })
 
 app.get('/api/mine', async (req, res) => {
-  if (await protect(req, res)) return
   try {
     const { isSolanaAddress } = await import('../lib/watchSnapshot.js')
     const { trackMineWallets } = await import('../lib/mineTrack.js')

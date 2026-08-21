@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { connectWallet, sendPayTx } from './lib/wallet'
+import { confirmTx, connectWallet, sendPayTx } from './lib/wallet'
 
 export const TREASURY = '5S9tyrZwcgV127fEQMzCaBNWmEKz3iUBdASKaurBSGHU'
 
@@ -16,6 +16,7 @@ export function DonateButton({
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [sig, setSig] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -29,6 +30,7 @@ export function DonateButton({
   async function send(sol: number) {
     setBusy(true)
     setNote(null)
+    setSig(null)
     try {
       const wallet = await connectWallet({ force: true })
       const res = await fetch('/api/gate', {
@@ -39,8 +41,11 @@ export function DonateButton({
       })
       const json = await res.json()
       if (!json.success || !json.data?.tx) throw new Error(json.error || 'Could not build donate tx')
-      await sendPayTx(json.data.tx)
-      setNote(`Sent ${sol} SOL. Thank you.`)
+      const signature = await sendPayTx(json.data.tx)
+      setSig(signature)
+      setNote('Sent — confirming…')
+      const confirmed = await confirmTx(signature)
+      setNote(confirmed ? `Confirmed ${sol} SOL. Thank you.` : `Sent ${sol} SOL — still confirming.`)
     } catch (err) {
       setNote(err instanceof Error ? err.message : String(err))
     } finally {
@@ -55,6 +60,7 @@ export function DonateButton({
         className={className}
         onClick={() => {
           setNote(null)
+          setSig(null)
           setOpen((v) => !v)
         }}
         disabled={busy}
@@ -70,6 +76,16 @@ export function DonateButton({
             </button>
           ))}
           {note && <p className="donate-note">{note}</p>}
+          {sig && (
+            <a
+              className="donate-note"
+              href={`https://solscan.io/tx/${sig}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View transaction
+            </a>
+          )}
         </div>
       )}
     </div>

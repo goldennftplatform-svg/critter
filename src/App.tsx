@@ -60,15 +60,30 @@ export default function App() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [showFeed, setShowFeed] = useState(false)
   const [watch, setWatch] = useState<WatchPayload | null>(null)
+  const [watchError, setWatchError] = useState<string | null>(null)
 
   async function loadCache() {
     const res = await fetch('/api/cache')
-    if (res.status === 402) return
     if (!res.ok) throw new Error(`Cache ${res.status}`)
     const json = await res.json()
     setRounds(json.data.rounds ?? [])
     setStatus(json.data.status ?? null)
     setError(json.data.status?.lastSyncError ?? null)
+  }
+
+  async function loadWatch({ quiet = false } = {}) {
+    try {
+      const res = await fetch('/api/watch', { cache: 'no-store' })
+      if (!res.ok) throw new Error(`Watch ${res.status}`)
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || 'Watch failed')
+      setWatch(json.data)
+      setWatchError(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (quiet) console.warn('[watch] refresh failed:', msg)
+      else setWatchError(msg)
+    }
   }
 
   async function pullFresh(full = false, { quiet = false } = {}) {
@@ -106,19 +121,18 @@ export default function App() {
         if (alive) setLoading(false)
       }
     })()
-    // Pull fresh rounds often — Lucky Pick settles ~every minute
-    fetch('/api/watch', { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((j) => {
-        if (alive && j.success) setWatch(j.data)
-      })
-      .catch(() => {})
+    // Watch snapshot is RPC-heavy — refresh it on a slower clock than rounds
+    loadWatch({ quiet: true })
+    const watchPoll = setInterval(() => {
+      loadWatch({ quiet: true })
+    }, 60_000)
     const poll = setInterval(() => {
       pullFresh(false, { quiet: true }).catch(() => {})
     }, 12_000)
     return () => {
       alive = false
       clearInterval(poll)
+      clearInterval(watchPoll)
     }
   }, [])
 
@@ -439,6 +453,7 @@ export default function App() {
         )}
       </section>
 
+      {watchError && <p className="err">Watch desk offline: {watchError}</p>}
       {watch && <RhDesk wallets={watch.wallets} />}
 
       <section className="bps-desk">
